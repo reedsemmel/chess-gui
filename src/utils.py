@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Copyright (c) 2021 Alishan Bhayani, Reed Semmel, Chris Degawa
 # SPDX-License-Identifier: GPL-3.0-only
 
@@ -192,24 +194,43 @@ class Piece(Enum):
         }
         return valid_moves[piece](current)
 
+    @staticmethod
+    def str_to_piece(piece_str: str) -> "Piece":
+        """Converts a single char piece to a Piece using the rules of FEN"""
+        str_to_piece: "dict[str, Piece]" = {
+            ' ': Piece.NONE,
+            'P': Piece.WP,
+            'R': Piece.WR,
+            'N': Piece.WN,
+            'B': Piece.WB,
+            'Q': Piece.WQ,
+            'K': Piece.WK,
+            'p': Piece.BP,
+            'r': Piece.BR,
+            'n': Piece.BN,
+            'b': Piece.BB,
+            'q': Piece.BQ,
+            'k': Piece.BK,
+        }
+        return str_to_piece[piece_str]
 
-str_to_piece: "dict[str, Piece]" = {
-    ' ': Piece.NONE,
-    'P': Piece.WP,
-    'R': Piece.WR,
-    'N': Piece.WN,
-    'B': Piece.WB,
-    'Q': Piece.WQ,
-    'K': Piece.WK,
-    'p': Piece.BP,
-    'r': Piece.BR,
-    'n': Piece.BN,
-    'b': Piece.BB,
-    'q': Piece.BQ,
-    'k': Piece.BK,
-}
-
-piece_to_str: "dict[Piece, str]" = {v: k for k, v in str_to_piece.items()}
+    def __str__(self) -> str:
+        piece_to_str: "dict[Piece, str]" = {
+            Piece.NONE: ' ',
+            Piece.WP: 'P',
+            Piece.WR: 'R',
+            Piece.WN: 'N',
+            Piece.WB: 'B',
+            Piece.WQ: 'Q',
+            Piece.WK: 'K',
+            Piece.BP: 'p',
+            Piece.BR: 'r',
+            Piece.BN: 'n',
+            Piece.BB: 'b',
+            Piece.BQ: 'q',
+            Piece.BK: 'k',
+        }
+        return piece_to_str[self]
 
 
 class PieceUnitTest(unittest.TestCase):

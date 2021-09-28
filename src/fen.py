@@ -12,10 +12,10 @@ Description:
     for chess.
 """
 
-from typing import Tuple
+from typing import Tuple, Union
 import unittest
 import numpy
-from utils import Piece, Coordinates, str_to_piece, piece_to_str
+from utils import Piece, Coordinates
 
 
 class FEN:
@@ -105,7 +105,7 @@ class FEN:
                     for _ in range(int(char)):
                         currrow.append(Piece.NONE)
                 elif char.lower() in "prbnqk":
-                    currrow.append(str_to_piece[char])
+                    currrow.append(Piece.str_to_piece(char))
             rows.insert(0, currrow)
 
         if FEN.__check_syntax(fields, rows) is False:
@@ -140,7 +140,7 @@ class FEN:
                 if count > 0:
                     currow += str(count)
                     count = 0
-                currow += piece_to_str[piece]
+                currow += str(piece)
             if count > 0:
                 currow += str(count)
             board.append(currow)
@@ -157,7 +157,7 @@ class FEN:
     def __str__(self) -> str:
         return self.get_fen()
 
-    def __getitem__(self, key: "str | int | Coordinates | list[Coordinates]") -> Piece:
+    def __getitem__(self, key: Union[str, int, Coordinates, list[Coordinates]]) -> Piece:
         """
         Returns either the row or piece.
         Can be indexed using 1-8 or a-h or using algebraic notation a8
@@ -174,6 +174,48 @@ class FEN:
             return self.__getitem__(key[0])[int(key[1])]
         return ""
 
+    # TODO: this function
+    # Design: check if a fen code has a king in check
+    # Return: Tuple consisting of True if any king is in check and True if white is in check else False
+    @staticmethod
+    def is_in_check(fen) -> Tuple[bool, bool]:
+        """Check if a the king is in check"""
+        return (False, False)
+
+    # TODO: this function
+    # Design: check if a fen code has a king in checkmate
+    # Return: Tuple consisting of True if any king is in checkmate with no valid moves
+    #         and True if white is in check else False
+    @staticmethod
+    def is_in_checkmate(fen) -> Tuple[bool, bool]:
+        """Check if a king is in checkmate"""
+        index: int = [x for row in fen.rows for x in row].index(Piece.BK)
+        if fen.is_in_check(fen) and fen[Piece.get_valid_king_moves(Coordinates(int(index / 8), index % 8))] == []:
+            return (True, False)
+        return (False, False)
+
+    def get_valid_moves(self, coordinates: Coordinates) -> list[Coordinates]:
+        """Get all valid moves for a piece, """
+        piece: Piece = self[coordinates]
+        if piece is Piece.NONE or self.is_in_checkmate(self):
+            return []
+        return Piece.return_valid_moves(piece, coordinates)
+
+    # TODO: add checks for check and mates and stuff
+    def make_move(self, old: Coordinates, new: Coordinates) -> bool:
+        """Tries to make a move if valid and returns true, else false if invalid"""
+        piece: Piece = self[old]
+        if False in self.valid or Piece.get(piece) is None or not old.is_valid() or not new.is_valid():
+            return False
+        if not self[old] == piece:
+            return False
+
+        # Check if the move is generally valid
+        if not new in self.get_valid_moves(piece, old):
+            return False
+
+        return True
+
     def print_board(self) -> str:
         """Pretty print the board"""
         ret: str = f'{str(self)}\nValid:{str(self.valid[0])}\n'
@@ -181,7 +223,7 @@ class FEN:
             return ret
         for i in range(7, -1, -1):
             for piece in self.rows[i]:
-                ret += f'│\033[4m{piece_to_str[piece]}\033[0m'
+                ret += f'│\033[4m{str(piece)}\033[0m'
             ret += '│\n'
         ret += f'{"W" if self.turns == "w" else "B"} to go\n'
         if self.castling != "-":
@@ -240,27 +282,27 @@ class TestFenCases(unittest.TestCase):
 
     def test_default(self):
         """Test default FENs"""
-        localfen: FEN = FEN()
-        board: str = localfen.print_board()
-        self.assertTrue(localfen.valid[0], board)
+        local_fen: FEN = FEN()
+        board: str = local_fen.print_board()
+        self.assertTrue(local_fen.valid[0], board)
         self.assertEqual(
-            localfen.get_fen(), "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", board)
+            local_fen.get_fen(), "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", board)
 
     def test_valid(self):
         """Test known valid FENs"""
         for fen in self.validfens:
-            localfen: FEN = FEN(fen)
-            board: str = localfen.print_board()
-            self.assertTrue(localfen.valid[0], board)
-            self.assertEqual(localfen.get_fen(), fen, board)
+            local_fen: FEN = FEN(fen)
+            board: str = local_fen.print_board()
+            self.assertTrue(local_fen.valid[0], board)
+            self.assertEqual(local_fen.get_fen(), fen, board)
 
     def test_invalid(self):
         """Test invalid FENs"""
         for fen in self.invalidfens:
-            localfen: FEN = FEN(fen)
-            board: str = localfen.print_board()
-            self.assertFalse(localfen.valid[0], board)
-            self.assertEqual(localfen.get_fen(), fen, board)
+            local_fen: FEN = FEN(fen)
+            board: str = local_fen.print_board()
+            self.assertFalse(local_fen.valid[0], board)
+            self.assertEqual(local_fen.get_fen(), fen, board)
 
     def test_indexing(self):
         """Test indexing into a FEN code"""
