@@ -64,30 +64,33 @@ class InteractiveBoard(QWidget):
         layout = QGridLayout(self)
         layout.setSpacing(0)
 
-        self.tileGrid = [[self.ChessTile(i, j) for i in range(8)] for j in range(8)]
-        for i in range(8):
-            for j in range(8):
-                layout.addWidget(self.tileGrid[i][j], i, j)
+        self.tile_grid = [[self.ChessTile(file, rank) for rank in range(8)] for file in range(8)]
+        for file in range(8):
+            for rank in range(8):
+                # Rank is the row, File is the column.
+                # Additionally, show the 1st rank on the bottom. (White's view)
+                # (Black's view would be (rank, 8 - file))
+                layout.addWidget(self.tile_grid[file][rank], 8 - rank, file)
 
         self.setLayout(layout)
     
     # Called by ChessTile widgets and passes their position to this function
-    def handleClick(self, x: int, y: int) -> None:
+    def handle_click(self, file: int, rank: int) -> None:
         """Handles a click from the user
         
         Called by a tile once it is clicked. The tile provides the arguments
         x and y from its position on the grid
         """
         # Dummy implementation for now. Just for testing
-        print("Tile", x, y, "clicked")
+        print(f"{chr(ord('a') + file)}{rank + 1} clicked")
     
-    # Replaces the piece on (x,y) with the piece name from the piece_img array
-    def drawPiece(self, piece: Piece, x: int, y: int) -> None:
+    # Replaces the piece on (file, rank) with the piece name from the piece_img array
+    def draw_piece(self, piece: Piece, file: int, rank: int) -> None:
         """Draws and replaced a piece on the board"""
-        if 0 <= x <= 7 and 0 <= y <= 7:
-            self.tileGrid[y][x].setImage(self.piece_img[piece])
+        if file in range(0, 8) and rank in range(0, 8):
+            self.tile_grid[file][rank].set_image(self.piece_img[piece])
         else:
-            print(f"Invalid index {x} {y}")
+            print(f"Invalid index {file} {rank}")
     
     class ChessTile(QWidget):
         """A basic chess tile widget
@@ -96,26 +99,26 @@ class InteractiveBoard(QWidget):
         clicks to the parent.
         """
         # TODO: add a resize event to redraw the pixmaps at a corrected size
-        def __init__(self, x: int, y: int) -> None:
+        def __init__(self, file: int, rank: int) -> None:
             super().__init__()
-            self.x = x
-            self.y = y
+            self.file = file
+            self.rank = rank
             # Holds the image we display
             self.label = QLabel(self)
 
             # TODO: pick less ugly colors
-            # Chess is played on a checkered board. Adding the x and y index is an
-            # easy way to see which we are on
-            if ((self.x + self.y) % 2):
-                self.setStyleSheet("background-color: #573D11;")
-            else:
+            # Chess is played on a checkered board. Adding the file and rank 
+            # index is an easy way to see which we are on
+            if ((self.file + self.rank) % 2):
                 self.setStyleSheet("background-color: #DCB167;")
+            else:
+                self.setStyleSheet("background-color: #573D11;")
 
-        def setImage(self, piece: QtGui.QPixmap):
+        def set_image(self, piece: QtGui.QPixmap):
             self.label.setPixmap(piece)
 
         def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
-            self.parentWidget().handleClick(self.x, self.y)
+            self.parentWidget().handle_click(self.file, self.rank)
 
 # Basic testing code
 
@@ -129,7 +132,7 @@ if (__name__ == "__main__"):
     defaultBoard[2][3] = Piece.WR
     for i in range(8):
         for j in range(8):
-            widget.drawPiece(defaultBoard[i][j], i, j)
+            widget.draw_piece(defaultBoard[i][j], i, j)
 
     widget.setGeometry(0, 0, 1000, 1000)
     widget.show()
