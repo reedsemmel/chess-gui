@@ -145,6 +145,21 @@ class FEN:
     def __str__(self) -> str:
         return self.__fen
 
+    def __getitem__(self, key) -> str:
+        """
+        Returns either the row or piece.
+        Can be indexed using 1-8 or a-h or using algebraic notation a8
+        """
+        if (type(key) is int or key.isdigit()) and int(key) in range(1, 9):
+            return self.rows[8 - int(key)]
+        if not type(key) is str:
+            return ""
+        if len(key) == 1 and key[0].lower() in "abcdefg":
+            return "".join([self.rows[x][ord(key) - ord("a")] for x in range(8)])
+        if len(key) == 2 and key[0].lower() in "abcdefg" and int(key[1]) in range(1, 9):
+            return self.__getitem__(key[0].lower())[8 - int(key[1])]
+        return ""
+
     def print_board(self) -> str:
         ret: str = self.__fen + "\n" + "Valid: " + str(self.valid) + "\n"
         if not self.board_valid:
@@ -224,6 +239,11 @@ class TestFenCases(unittest.TestCase):
             localfen: FEN = FEN(fen)
             print(localfen.print_board())
             self.assertFalse(localfen.valid)
+
+    def test_indexing(self):
+        self.assertEqual(FEN()["a8"], "r")
+        self.assertEqual(FEN()["a"], "rp    PR")
+        self.assertEqual(FEN()["8"], "rnbqkbnr")
 
 
 if __name__ == "__main__":
