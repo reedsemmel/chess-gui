@@ -36,9 +36,9 @@ class MainMenuScreen(QWidget):
         # Buttons
         buttons: QVBoxLayout = QVBoxLayout()
 
-        buttons.addWidget(self.make_button("Play", self.parent().play_event, self))
-        buttons.addWidget(self.make_button("Load", self.parent().load_event, self))
-        buttons.addWidget(self.make_button("Quit", self.parent().close, self))
+        buttons.addWidget(make_button("Play", self.parent().play_event, self))
+        buttons.addWidget(make_button("Load", self.parent().load_event, self))
+        buttons.addWidget(make_button("Quit", self.parent().close, self))
 
         self.layout().addLayout(buttons, 1, 0, Qt.AlignHCenter | Qt.AlignTop)
 
@@ -86,4 +86,4 @@ class EndGameScreen(QWidget):
     def __init__(self, parent: Optional['QWidget'] = None) -> None:
         super().__init__(parent)
         self.setLayout(QGridLayout(self))
-        self.layout().addWidget(QLabel("This is the end of game screen.", self), Qt.AlignCenter)
+        self.layout().addWidget(QLabel("This is the end of game screen.", self), 0, 0, Qt.AlignCenter)
