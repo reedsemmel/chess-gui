@@ -12,7 +12,8 @@ from enum import Enum
 from PyQt5.QtGui import QCloseEvent, QIcon
 from PyQt5.QtWidgets import QAction, QApplication, QMainWindow, QMenu, QMessageBox, QWidget
 
-from screens import EndGameScreen, GameScreen, MainMenuScreen
+from screens import EndGameScreen, GameScreen, MainMenuScreen, SettingsScreen
+from utils import Settings
 
 class GameWindow(QMainWindow):
     """Main Window for the game that will house all the GUI elements."""
@@ -22,16 +23,26 @@ class GameWindow(QMainWindow):
             """Denotes the states the game can be in as a whole."""
             PRE_LAUNCH = 1
             MAIN_MENU = 2
-            LOADING = 3
-            GAME = 4
-            SAVING = 5
-            END_OF_GAME = 6
+            SETTINGS = 3
+            LOADING = 4
+            GAME = 5
+            SAVING = 6
+            END_OF_GAME = 7
 
         def __init__(self, parent: QMainWindow) -> None:
             self.game_logic = None
             self.game_ui: QWidget = None
             self.parent: QMainWindow = parent
+            self.settings: Settings = Settings()
             self.state: self.State = self.State.PRE_LAUNCH
+
+        def close_settings(self) -> None:
+            """Any actions to close the settings screen would want to run here."""
+            if self.state == self.State.SETTINGS:
+                self.state: self.State = self.State.LOADING
+                self.game_ui: MainMenuScreen = MainMenuScreen(self.parent)
+                self.state: self.State = self.State.MAIN_MENU
+                self.parent.setCentralWidget(self.game_ui)
 
         def end(self) -> None:
             """Marks end of game and changes to end of game screen."""
@@ -45,8 +56,16 @@ class GameWindow(QMainWindow):
             """Any actions to load from a previously saved game state would want to run here."""
             if self.state in (self.State.MAIN_MENU, self.State.GAME):
                 self.state: self.State = self.State.LOADING
-                self.game_ui: GameScreen = GameScreen(self.parent)
+                self.game_ui: GameScreen = GameScreen(self.settings, self.parent)
                 self.state: self.State = self.State.GAME
+                self.parent.setCentralWidget(self.game_ui)
+
+        def open_settings(self) -> None:
+            """Any actions to open the settings screen would want to run here."""
+            if self.state == self.State.MAIN_MENU:
+                self.state: self.State = self.State.LOADING
+                self.game_ui: SettingsScreen = SettingsScreen(self.settings, self.parent)
+                self.state: self.State = self.State.SETTINGS
                 self.parent.setCentralWidget(self.game_ui)
 
         def play(self) -> None:
@@ -92,6 +111,10 @@ class GameWindow(QMainWindow):
         event.ignore()
         return None
 
+    def close_settings_event(self) -> None:
+        """Triggers the closing of the settings screens."""
+        self.game.close_settings()
+
     def end_event(self) -> None:
         """Triggers the end of a game."""
         self.game.end()
@@ -99,6 +122,10 @@ class GameWindow(QMainWindow):
     def load_event(self) -> None:
         """Triggers loading of a game."""
         self.game.load()
+
+    def open_settings_event(self) -> None:
+        """Triggers the opening of the settings screens."""
+        self.game.open_settings()
 
     def play_event(self) -> None:
         """Triggers start of a new game."""

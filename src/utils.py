@@ -7,6 +7,7 @@ Description:
 """
 
 from enum import Enum, unique
+from re import fullmatch
 
 from PyQt5.QtGui import QPixmap
 
@@ -52,3 +53,17 @@ class Player(Enum):
     """Identifier for the two players in a game."""
     P1 = 0
     P2 = 1
+
+class Settings:
+    """Holds all configurable values for the game and provides a method to modify them."""
+    def __init__(self) -> None:
+        self.player_name: str = "Player 1"
+        self.opponent_name: str = "Player 2"
+
+    def change_name(self, new_name: str, check: bool = True) -> None:
+        """Changes player name given it contains only alphanumeric characters."""
+        if check:
+            if bool(fullmatch("([A-Za-z]|[0-9]|[ ])+", new_name)):
+                self.player_name: str = new_name
+        else:
+            self.player_name: str = new_name

@@ -6,16 +6,16 @@ Description:
     Houses the the different screen states for the application.
 """
 
-from typing import Callable, Optional, Union
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QResizeEvent
-from PyQt5.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QPushButton
-from PyQt5.QtWidgets import QSizePolicy, QVBoxLayout, QWidget
+from typing import Callable, Optional
+from PyQt5.QtCore import QRegExp, Qt
+from PyQt5.QtGui import QRegExpValidator, QResizeEvent
+from PyQt5.QtWidgets import QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel
+from PyQt5.QtWidgets import QLineEdit, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 
 from interactive_board import InteractiveBoard
-from utils import Piece, Player
+from utils import Piece, Player, Settings
 
-def make_button(content: str, func: Callable, parent: Union[QWidget, None] = None) -> QPushButton:
+def make_button(content: str, func: Callable, parent: Optional['QWidget'] = None) -> QPushButton:
     """Returns a button with the specified content and function."""
     button: QPushButton = QPushButton(content, parent)
     button.clicked.connect(func)
@@ -33,6 +33,7 @@ class MainMenuScreen(QWidget):
         buttons: QVBoxLayout = QVBoxLayout()
         buttons.addWidget(make_button("Play", self.parent().play_event, self))
         buttons.addWidget(make_button("Load", self.parent().load_event, self))
+        buttons.addWidget(make_button("Settings", self.parent().open_settings_event, self))
         buttons.addWidget(make_button("Quit", self.parent().close, self))
         self.layout.addLayout(buttons, 1, 0, Qt.AlignHCenter | Qt.AlignTop)
 
@@ -80,7 +81,7 @@ class GameScreen(QWidget):
             """Sets the widgets's properties."""
             self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
-    class CapturedPiecesBar(QWidget):
+    class CapturedPiecesBar(QFrame):
         """
             Widget that creates a bar to display captured pieces
             as an indicator of the state of the game.
@@ -127,11 +128,13 @@ class GameScreen(QWidget):
         def _set_widget_properties(self) -> None:
             """Sets the widgets's properties."""
             self.setFixedHeight(50)
+            self.setFrameStyle(QFrame.StyledPanel | QFrame.Raised)
+            self.setLineWidth(3)
             self.setStyleSheet("background-color: #f5f5dc;")
 
-    def __init__(self, parent: Optional['QWidget'] = None) -> None:
+    def __init__(self, settings: Settings, parent: Optional['QWidget'] = None) -> None:
         super().__init__(parent)
-        self._set_custom_properties()
+        self._set_custom_properties(settings)
         self._set_layout()
         self._add_elements()
 
@@ -139,9 +142,23 @@ class GameScreen(QWidget):
         """Adds captured piece to specified player's captured bar."""
         self.players[player].add_piece(piece)
 
+    def load(self, states: "tuple[tuple[Player, tuple[Piece]], tuple[Player, tuple[Piece]]]") -> None: # pylint: disable=line-too-long
+        """Any actions to restore previously preserved game would want to run here."""
+        for (player, pieces) in states:
+            self.players[player].import_pieces(pieces)
+
+    def save(self)-> "tuple[tuple[Player, tuple[Piece]], tuple[Player, tuple[Piece]]]":
+        """Any actions to preserve the game state would want to run here."""
+        return ((Player.P1, self.players[Player.P1].export_pieces()),
+            (Player.P2, self.players[Player.P2].export_pieces()))
+
+    # def test_capture(self) -> None:
+    #     self.capture_piece(Piece.WB, Player.P1)
+    #     self.capture_piece(Piece.BB, Player.P2)
+
     def _add_board(self) -> None:
         """Adds the board to the layout."""
-        self.layout.addWidget(self.CenteredSquareContainer(InteractiveBoard(), self), 1, 0)
+        self.layout.addWidget(self.CenteredSquareContainer(self.board, self), 1, 0)
         self.layout.setRowStretch(1, 8)
 
     def _add_elements(self):
@@ -155,25 +172,30 @@ class GameScreen(QWidget):
         """Adds the enemy side's layout to the layout."""
         enemy_layout: QHBoxLayout = QHBoxLayout()
         enemy_layout.addWidget(self.players[Player.P2], 0, Qt.AlignLeft | Qt.AlignVCenter)
-        enemy_layout.addWidget(QLabel("Player 2"), 1, Qt.AlignRight | Qt.AlignVCenter)
+        enemy_layout.addWidget(QLabel(self.settings.opponent_name), 1, Qt.AlignRight
+            | Qt.AlignVCenter)
         self.layout.addLayout(enemy_layout, 0, 0, Qt.AlignTop)
         self.layout.setRowStretch(0, 1)
 
     def _add_player_side(self) -> None:
         """Adds the player side's layout to the layout."""
         player_layout: QHBoxLayout = QHBoxLayout()
-        player_layout.addWidget(QLabel("Player 1"), 1, Qt.AlignLeft | Qt.AlignVCenter)
+        player_layout.addWidget(QLabel(self.settings.player_name), 1, Qt.AlignLeft
+            | Qt.AlignVCenter)
         player_layout.addWidget(self.players[Player.P1], 0, Qt.AlignRight | Qt.AlignVCenter)
         player_layout.addWidget(make_button("End Game", self.parent().end_event, self))
+        # player_layout.addWidget(make_button("Test", self.test_capture, self))
         self.layout.addLayout(player_layout, 2, 0, Qt.AlignBottom)
         self.layout.setRowStretch(2, 1)
 
-    def _set_custom_properties(self) -> None:
+    def _set_custom_properties(self, settings: Settings) -> None:
         """Sets properties unique to this widget."""
+        self.board: InteractiveBoard = InteractiveBoard()
         self.players: "dict[Player, self.CapturedPiecesBar]" = {
             Player.P1: self.CapturedPiecesBar(self),
             Player.P2: self.CapturedPiecesBar(self)
         }
+        self.settings: Settings = settings
 
     def _set_layout(self) -> None:
         """Sets the widget's layout."""
@@ -200,4 +222,45 @@ class EndGameScreen(QWidget):
     def _set_layout(self) -> None:
         """Sets the widget's layout."""
         self.layout: QGridLayout = QGridLayout(self)
+        self.setLayout(self.layout)
+
+class SettingsScreen(QWidget):
+    """Screen that houses elements that allow user to change allowed settings."""
+    def __init__(self, settings: Settings, parent: Optional['QWidget'] = None) -> None:
+        super().__init__(parent)
+        self._set_custom_properties(settings)
+        self._set_layout()
+        self._add_elements()
+
+    def _add_elements(self) -> None:
+        """Adds all elements unique to this screen to the layout."""
+        self._add_back_button()
+        self._add_player_name_form()
+
+    def _add_back_button(self) -> None:
+        back_button: QPushButton = make_button("Back", self.parent().close_settings_event, self)
+        self.layout.addWidget(back_button)
+        self.setFocusProxy(back_button)
+
+    def _add_player_name_form(self) -> None:
+        """Add form to change player name to the layout."""
+        form_field: QLineEdit = QLineEdit(self.player_name, self)
+        form_field.setMaxLength(20)
+        form_field.setValidator(QRegExpValidator(QRegExp("([A-Za-z]|[0-9]|[ ])+"), self))
+        form_field.textChanged.connect(self._handle_name_change)
+        form_field.textEdited.connect(self._handle_name_change)
+        self.layout.addRow("Player Name:", form_field)
+
+    def _handle_name_change(self, new_name: str) -> None:
+        """Reflects change in form field to the player name stored in settings instance."""
+        self.settings.change_name(new_name, False)
+
+    def _set_custom_properties(self, settings: Settings) -> None:
+        """Sets properties unique to this widget."""
+        self.settings: Settings = settings
+        self.player_name: str = self.settings.player_name
+
+    def _set_layout(self) -> None:
+        """Sets the widget's layout."""
+        self.layout: QFormLayout = QFormLayout(self)
         self.setLayout(self.layout)
