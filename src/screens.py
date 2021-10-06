@@ -190,7 +190,7 @@ class GameScreen(QWidget):
 
     def _set_custom_properties(self, settings: Settings) -> None:
         """Sets properties unique to this widget."""
-        self.board: InteractiveBoard = InteractiveBoard()
+        self.board: InteractiveBoard = InteractiveBoard(settings)
         self.players: "dict[Player, self.CapturedPiecesBar]" = {
             Player.P1: self.CapturedPiecesBar(self),
             Player.P2: self.CapturedPiecesBar(self)
@@ -236,29 +236,65 @@ class SettingsScreen(QWidget):
         """Adds all elements unique to this screen to the layout."""
         self._add_back_button()
         self._add_player_name_form()
+        self._add_colors_hex_form()
 
     def _add_back_button(self) -> None:
+        """Adds a back button to the layout for returning to main menu."""
         back_button: QPushButton = make_button("Back", self.parent().close_settings_event, self)
         self.layout.addWidget(back_button)
         self.setFocusProxy(back_button)
 
+    def _add_colors_hex_form(self) -> None:
+        """Add form to change the colors of the alternating tiles."""
+        hex_regex: str = "^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$"
+
+        self.primary_tile_color_form_field.setMaxLength(7)
+        self.primary_tile_color_form_field.setValidator(QRegExpValidator(
+            QRegExp(hex_regex), self))
+        self.primary_tile_color_form_field.editingFinished.connect(
+            self._handle_primary_color_change)
+        self.primary_tile_color_form_field.returnPressed.connect(
+            self._handle_primary_color_change)
+        self.layout.addRow("Primary Tile Color: ", self.primary_tile_color_form_field)
+
+        self.secondary_tile_color_form_field.setMaxLength(7)
+        self.secondary_tile_color_form_field.setValidator(QRegExpValidator(
+            QRegExp(hex_regex), self))
+        self.secondary_tile_color_form_field.editingFinished.connect(
+            self._handle_secondary_color_change)
+        self.secondary_tile_color_form_field.returnPressed.connect(
+            self._handle_secondary_color_change)
+        self.layout.addRow("Secondary Tile Color: ", self.secondary_tile_color_form_field)
+
     def _add_player_name_form(self) -> None:
         """Add form to change player name to the layout."""
-        form_field: QLineEdit = QLineEdit(self.player_name, self)
-        form_field.setMaxLength(20)
-        form_field.setValidator(QRegExpValidator(QRegExp("([A-Za-z]|[0-9]|[ ])+"), self))
-        form_field.textChanged.connect(self._handle_name_change)
-        form_field.textEdited.connect(self._handle_name_change)
-        self.layout.addRow("Player Name:", form_field)
+        self.player_name_form_field.setMaxLength(20)
+        self.player_name_form_field.setValidator(QRegExpValidator(
+            QRegExp("([A-Za-z]|[0-9]|[ ])+"), self))
+        self.player_name_form_field.editingFinished.connect(self._handle_name_change)
+        self.player_name_form_field.returnPressed.connect(self._handle_name_change)
+        self.layout.addRow("Player Name:", self.player_name_form_field)
 
-    def _handle_name_change(self, new_name: str) -> None:
-        """Reflects change in form field to the player name stored in settings instance."""
-        self.settings.change_name(new_name, False)
+    def _handle_name_change(self) -> None:
+        """Reflects change in form field to the player name stored in settings."""
+        self.settings.change_name(self.player_name_form_field.text(), False)
+
+    def _handle_primary_color_change(self) -> None:
+        """Reflects change in form field to the primary hex color stored in settings."""
+        self.settings.change_primary_color(self.primary_tile_color_form_field.text(), False)
+
+    def _handle_secondary_color_change(self) -> None:
+        """Reflects change in form field to the secondary hex color stored in settings."""
+        self.settings.change_secondary_color(self.secondary_tile_color_form_field.text(), False)
 
     def _set_custom_properties(self, settings: Settings) -> None:
         """Sets properties unique to this widget."""
         self.settings: Settings = settings
-        self.player_name: str = self.settings.player_name
+        self.player_name_form_field: QLineEdit = QLineEdit(self.settings.player_name, self)
+        self.primary_tile_color_form_field: QLineEdit = QLineEdit(self.settings.primary_color,
+            self)
+        self.secondary_tile_color_form_field: QLineEdit = QLineEdit(self.settings.secondary_color,
+            self)
 
     def _set_layout(self) -> None:
         """Sets the widget's layout."""

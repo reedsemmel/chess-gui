@@ -60,6 +60,9 @@ class Settings:
         self.player_name: str = "Player 1"
         self.opponent_name: str = "Player 2"
 
+        self.primary_color: str = "#573D11"
+        self.secondary_color: str = "#DCB167"
+
     def change_name(self, new_name: str, check: bool = True) -> None:
         """Changes player name given it contains only alphanumeric characters."""
         if check:
@@ -67,3 +70,24 @@ class Settings:
                 self.player_name: str = new_name
         else:
             self.player_name: str = new_name
+
+    def change_primary_color(self, new_color_hex: str, check: bool = True) -> None:
+        """Changes primary color given the new hex is valid."""
+        if check:
+            if self._is_valid_hex(new_color_hex):
+                self.primary_color: str = new_color_hex
+        else:
+            self.primary_color: str = new_color_hex
+
+    def change_secondary_color(self, new_color_hex: str, check: bool = True) -> None:
+        """Changes secondary color given the new hex is valid."""
+        if check:
+            if self._is_valid_hex(new_color_hex):
+                self.secondary_color: str = new_color_hex
+        else:
+            self.secondary_color: str = new_color_hex
+
+    @staticmethod
+    def _is_valid_hex(color_hex: str) -> bool:
+        """Checks if the color hex is valid by using a regex."""
+        return bool(fullmatch("^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$", color_hex))
