@@ -3,6 +3,10 @@
 # Copyright (c) 2021 Chris Degawa
 # SPDX-License-Identifier: GPL-3.0-only
 
+import unittest
+from utils import Piece, Coordinates, str_to_piece, piece_to_str
+import numpy
+
 """
 File: fen.py
 Author: Chris Degawa
@@ -39,16 +43,16 @@ class FEN:
     """
 
     @staticmethod
-    def __check_syntax(fields: list[str], rows: list[str]) -> bool:
+    def __check_syntax(fields: list[str], rows: list[list[Piece]]) -> bool:
         """Basic syntax checks"""
 
-        def __check_row(row: str) -> bool:
+        def __check_row(row: list[Piece]) -> bool:
             """Check a row for validity"""
 
             if len(row) != 8:
                 return False
             for c in row:
-                if not c.upper() in " PRNBQK":
+                if not c in Piece:
                     return False
             return True
 
@@ -77,7 +81,7 @@ class FEN:
         return True
 
     @staticmethod
-    def __check_board(fields: list[str], rows: list[str]) -> bool:
+    def __check_board(fields: list[str], rows: list[list[Piece]]) -> bool:
         """Chess piece checks"""
 
         """Each side can only have 1 king"""
@@ -85,28 +89,28 @@ class FEN:
             return False
 
         """Pawn on row 0 or 7 check"""
-        if rows[0].count("p") or rows[0].count("P") or rows[7].count("p") or rows[7].count("P"):
+        if Piece.BP in rows[0] or Piece.BP in rows[7] or Piece.WP in rows[0] or Piece.WP in rows[7]:
             return False
 
         """Opposing kings can't be next to nor diagonal from each other"""
-        rows_concatinated: str = "".join(rows)
-        i: int = int(rows_concatinated.index("k") / 8)
-        j: int = rows_concatinated.index("k") % 8
-        if i > 0 and rows[i - 1][j].lower() == "k":
+        rows_concatinated: list[Piece] = [x for row in rows for x in row]
+        i: int = int(rows_concatinated.index(Piece.BK) / 8)
+        j: int = rows_concatinated.index(Piece.BK) % 8
+        if i > 0 and rows[i - 1][j] is Piece.WK:
             return False
-        if i < 7 and rows[i + 1][j].lower() == "k":
+        if i < 7 and rows[i + 1][j] is Piece.WK:
             return False
-        if j > 0 and rows[i][j - 1].lower() == "k":
+        if j > 0 and rows[i][j - 1] is Piece.WK:
             return False
-        if j < 7 and rows[i][j + 1].lower() == "k":
+        if j < 7 and rows[i][j + 1] is Piece.WK:
             return False
-        if i > 0 and j > 0 and rows[i - 1][j - 1].lower() == "k":
+        if i > 0 and j > 0 and rows[i - 1][j - 1] is Piece.WK:
             return False
-        if i > 0 and j < 7 and rows[i - 1][j + 1].lower() == "k":
+        if i > 0 and j < 7 and rows[i - 1][j + 1] is Piece.WK:
             return False
-        if i < 7 and j > 0 and rows[i + 1][j - 1].lower() == "k":
+        if i < 7 and j > 0 and rows[i + 1][j - 1] is Piece.WK:
             return False
-        if i < 7 and j < 7 and rows[i + 1][j + 1].lower() == "k":
+        if i < 7 and j < 7 and rows[i + 1][j + 1] is Piece.WK:
             return False
         return True
 
@@ -115,7 +119,7 @@ class FEN:
 
         self.valid: bool = False
         self.board_valid: bool = False
-        self.rows: tuple[str, ...] = ()
+        self.rows: numpy.ndarray = numpy.zeros((8, 8), dtype=Piece)
         self.turns: str = ""
         self.castling: str = ""
         self.en_passant: str = ""
@@ -129,14 +133,22 @@ class FEN:
         if len(self.__fen) == 0:
             return
 
-        rows: "list[str]" = ["".join(
-            [x if x.isalpha() else " " * int(x) for x in row]) for row in fields[0].split("/")]
+        rows: "list[list[Piece]]" = []
+        for row in fields[0].split("/"):
+            currrow: list[Piece] = []
+            for x in row:
+                if x.isdigit():
+                    for _ in range(int(x)):
+                        currrow.append(Piece.NONE)
+                elif x.lower() in "prbnqk":
+                    currrow.append(str_to_piece[x])
+            rows.insert(0, currrow)
 
         if FEN.__check_syntax(fields, rows) is False:
             return
 
         self.board_valid: bool = True
-        self.rows: tuple(str, ...) = tuple(rows)
+        self.rows: numpy.ndarray = numpy.array(rows)
         self.turns: str = fields[1]
         self.castling: str = fields[2]
         self.en_passant: str = fields[3]
@@ -151,36 +163,38 @@ class FEN:
     def __str__(self) -> str:
         return self.__fen
 
-    def __getitem__(self, key) -> str:
+    def __getitem__(self, key: "str | int | Coordinates") -> Piece:
         """
         Returns either the row or piece.
         Can be indexed using 1-8 or a-h or using algebraic notation a8
         """
-        if (isinstance(key, int) or key.isdigit()) and int(key) in range(1, 9):
-            return self.rows[8 - int(key)]
+        if isinstance(key, Coordinates):
+            return self.rows[key.file][key.rank]
+        if (isinstance(key, int) or key.isdigit()) and int(key) in range(8):
+            return self.rows[int(key)]
         if not isinstance(key, str):
             return ""
         if len(key) == 1 and key[0].lower() in "abcdefg":
-            return "".join([self.rows[x][ord(key) - ord("a")] for x in range(8)])
-        if len(key) == 2 and key[0].lower() in "abcdefg" and int(key[1]) in range(1, 9):
-            return self.__getitem__(key[0].lower())[8 - int(key[1])]
+            return self.rows[:, ord(key[0].lower()) - ord('a')]
+        if len(key) == 2 and key[0].lower() in "abcdefg" and int(key[1]) in range(8):
+            return self.__getitem__(key[0])[int(key[1])]
         return ""
 
     def print_board(self) -> str:
-        ret: str = self.__fen + "\n" + "Valid: " + str(self.valid) + "\n"
+        ret: str = f'{self.__fen}\nValid:{str(self.valid)}\n'
         if not self.board_valid:
             return ret
-        for i in range(8):
+        for i in range(7, -1, -1):
             for piece in self.rows[i]:
-                ret += "│\033[4m{}\033[0m".format(piece)
-            ret += "│\n"
-        ret += "W to go\n" if self.turns == "w" else "B to go\n"
+                ret += f'│\033[4m{piece_to_str[piece]}\033[0m'
+            ret += '│\n'
+        ret += f'{"W" if self.turns == "w" else "B"} to go\n'
         if self.castling != "-":
-            ret += "Castling: " + self.castling + "\n"
+            ret += f'Castling: {self.castling}\n'
         if self.en_passant != "-":
-            ret += "En passant: " + self.en_passant + "\n"
-        ret += "Half move clock: " + str(self.half_move_clock) + "\n"
-        ret += "Full move number: " + str(self.full_move_number) + "\n"
+            ret += f'En passant: {self.en_passant}\n'
+        ret += f'Half move clock: {str(self.half_move_clock)}\n'
+        ret += f'Full move number: {str(self.full_move_number)}\n'
         return ret
 
 
@@ -247,9 +261,29 @@ class TestFenCases(unittest.TestCase):
             self.assertFalse(localfen.valid)
 
     def test_indexing(self):
-        self.assertEqual(FEN()["a8"], "r")
-        self.assertEqual(FEN()["a"], "rp    PR")
-        self.assertEqual(FEN()["8"], "rnbqkbnr")
+        fen: FEN = FEN()
+        expected = Piece.WR
+        actual = fen[Coordinates(0, 0)]
+        print(f'Expected: {expected}\n'
+              f'Actual: {actual}', flush=True)
+        self.assertEqual(expected, actual)
+        expected = Piece.BR
+        actual = fen["a7"]
+        print(f'Expected: {expected}\n'
+              f'Actual: {actual}', flush=True)
+        self.assertEqual(expected, actual)
+        expected = fen["a"]
+        actual = numpy.array([Piece.WR, Piece.WP,
+                              Piece.NONE, Piece.NONE, Piece.NONE, Piece.NONE, Piece.BP, Piece.BR])
+        print(f'Expected: {expected}\n'
+              f'Actual: {actual}', flush=True)
+        self.assertTrue(numpy.array_equal(expected, actual))
+        expected = fen["7"]
+        actual = numpy.array([Piece.BR, Piece.BN,
+                              Piece.BB, Piece.BQ, Piece.BK, Piece.BB, Piece.BN, Piece.BR])
+        print(f'Expected: {expected}\n'
+              f'Actual: {actual}', flush=True)
+        self.assertTrue(numpy.array_equal(expected, actual))
 
 
 if __name__ == "__main__":
