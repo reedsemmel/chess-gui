@@ -126,11 +126,13 @@ class FEN:
         self.half_move_clock: int = 0
         self.full_move_number: int = 0
 
+        '''Fen code as we received it if we need to print an error'''
+        self.__fen: str = fen
+
         fields: "list[str]" = list(
             filter("".__ne__, fen.strip().split(" ")))
-        self.__fen: str = " ".join(fields)
 
-        if len(self.__fen) == 0:
+        if len(" ".join(fields)) == 0:
             return
 
         rows: "list[list[Piece]]" = []
@@ -160,8 +162,39 @@ class FEN:
 
         self.valid: bool = True
 
+    def get_fen(self) -> str:
+        """Get the FEN code"""
+        try:
+            board: list[str] = []
+
+            for row in list(reversed(self.rows)):
+                currow: str = ""
+                count: int = 0
+                for piece in row:
+                    if piece is Piece.NONE:
+                        count += 1
+                        continue
+                    if count > 0:
+                        currow += str(count)
+                        count = 0
+                    currow += piece_to_str[piece]
+                if count > 0:
+                    currow += str(count)
+                board.append(currow)
+
+            return " ".join([
+                "/".join(board),
+                self.turns,
+                self.castling,
+                self.en_passant,
+                str(self.half_move_clock),
+                str(self.full_move_number)
+            ])
+        except:
+            return self.__fen
+
     def __str__(self) -> str:
-        return self.__fen
+        return self.get_fen()
 
     def __getitem__(self, key: "str | int | Coordinates") -> Piece:
         """
@@ -181,7 +214,7 @@ class FEN:
         return ""
 
     def print_board(self) -> str:
-        ret: str = f'{self.__fen}\nValid:{str(self.valid)}\n'
+        ret: str = f'{str(self)}\nValid:{str(self.valid)}\n'
         if not self.board_valid:
             return ret
         for i in range(7, -1, -1):
@@ -247,18 +280,22 @@ class TestFenCases(unittest.TestCase):
         localfen: FEN = FEN()
         print(localfen.print_board())
         self.assertTrue(localfen.valid)
+        self.assertEqual(
+            localfen.get_fen(), "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
 
     def test_valid(self):
         for fen in self.validfens:
             localfen: FEN = FEN(fen)
             print(localfen.print_board())
             self.assertTrue(localfen.valid)
+            self.assertEqual(localfen.get_fen(), fen)
 
     def test_invalid(self):
         for fen in self.invalidfens:
             localfen: FEN = FEN(fen)
             print(localfen.print_board())
             self.assertFalse(localfen.valid)
+            self.assertEqual(localfen.get_fen(), fen)
 
     def test_indexing(self):
         fen: FEN = FEN()
