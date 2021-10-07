@@ -1,3 +1,6 @@
+# Copyright (c) 2021 Alishan Bhayani
+# SPDX-License-Identifier: GPL-3.0-only
+
 """
 File: screens.py
 Author: Alishan Bhayani

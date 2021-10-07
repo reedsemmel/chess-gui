@@ -1,3 +1,6 @@
+# Copyright (c) 2021 Alishan Bhayani, Reed Semmel, Chris Degawa
+# SPDX-License-Identifier: GPL-3.0-only
+
 """
 File: utils.py
 Author: Alishan Bhayani

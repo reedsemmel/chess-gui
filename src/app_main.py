@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2021 Alishan Bhayani
+# SPDX-License-Identifier: GPL-3.0-only
+
 """
 File: app_main.py
 Author: Alishan Bhayani
