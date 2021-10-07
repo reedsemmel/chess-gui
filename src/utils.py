@@ -8,6 +8,7 @@ Description:
 
 from enum import Enum, unique
 from re import fullmatch
+from pathlib import Path
 
 from PyQt5.QtGui import QPixmap
 
@@ -31,20 +32,21 @@ class Piece(Enum):
     @staticmethod
     def get_piece_pixmap(piece) -> QPixmap:
         """Returns the corresponding pixmap for the provided piece."""
+        base_path: Path = Path(__file__).parent.parent.resolve() / 'assets'
         piece_img = {
-            Piece.NONE: QPixmap("assets/blank.png"),
-            Piece.WR: QPixmap("assets/wr.png"),
-            Piece.WB: QPixmap("assets/wb.png"),
-            Piece.WN: QPixmap("assets/wn.png"),
-            Piece.WQ: QPixmap("assets/wq.png"),
-            Piece.WK: QPixmap("assets/wk.png"),
-            Piece.WP: QPixmap("assets/wp.png"),
-            Piece.BR: QPixmap("assets/br.png"),
-            Piece.BB: QPixmap("assets/bb.png"),
-            Piece.BN: QPixmap("assets/bn.png"),
-            Piece.BQ: QPixmap("assets/bq.png"),
-            Piece.BK: QPixmap("assets/bk.png"),
-            Piece.BP: QPixmap("assets/bp.png"),
+            Piece.NONE: QPixmap(str(base_path / 'blank.png')),
+            Piece.WR: QPixmap(str(base_path / 'wr.png')),
+            Piece.WB: QPixmap(str(base_path / 'wb.png')),
+            Piece.WN: QPixmap(str(base_path / 'wn.png')),
+            Piece.WQ: QPixmap(str(base_path / 'wq.png')),
+            Piece.WK: QPixmap(str(base_path / 'wk.png')),
+            Piece.WP: QPixmap(str(base_path / 'wp.png')),
+            Piece.BR: QPixmap(str(base_path / 'br.png')),
+            Piece.BB: QPixmap(str(base_path / 'bb.png')),
+            Piece.BN: QPixmap(str(base_path / 'bn.png')),
+            Piece.BQ: QPixmap(str(base_path / 'bq.png')),
+            Piece.BK: QPixmap(str(base_path / 'bk.png')),
+            Piece.BP: QPixmap(str(base_path / 'bp.png')),
         }
         return piece_img[piece]
 
