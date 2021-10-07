@@ -156,9 +156,9 @@ class FEN:
         Returns either the row or piece.
         Can be indexed using 1-8 or a-h or using algebraic notation a8
         """
-        if (type(key) is int or key.isdigit()) and int(key) in range(1, 9):
+        if (isinstance(key, int) or key.isdigit()) and int(key) in range(1, 9):
             return self.rows[8 - int(key)]
-        if not type(key) is str:
+        if not isinstance(key, str):
             return ""
         if len(key) == 1 and key[0].lower() in "abcdefg":
             return "".join([self.rows[x][ord(key) - ord("a")] for x in range(8)])
