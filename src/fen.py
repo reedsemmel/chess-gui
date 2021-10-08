@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2021 Chris Degawa
 # SPDX-License-Identifier: GPL-3.0-only
