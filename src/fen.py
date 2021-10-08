@@ -1,12 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+# Copyright (c) 2021 Chris Degawa
+# SPDX-License-Identifier: GPL-3.0-only
+
+"""
+File: fen.py
+Author: Chris Degawa
+Date: 9/27/2021
+Description:
+    Houses information and utilites for FEN (Forsyth-Edwards Notation) encoding
+    for chess.
+"""
+
 import unittest
-
-__author__ = "Christopher Degawa"
-__license__ = "GPL-3.0-or-later"
-__version__ = "0.0.1"
-__contact__ = "cdegawa@vols.utk.edu"
-__date__ = "9/27/2021"
-
 
 class FEN:
     """
