@@ -3,10 +3,6 @@
 # Copyright (c) 2021 Chris Degawa
 # SPDX-License-Identifier: GPL-3.0-only
 
-import unittest
-from utils import Piece, Coordinates, str_to_piece, piece_to_str
-import numpy
-
 """
 File: fen.py
 Author: Chris Degawa
@@ -16,25 +12,27 @@ Description:
     for chess.
 """
 
+from typing import Tuple
 import unittest
+import numpy
+from utils import Piece, Coordinates, str_to_piece, piece_to_str
+
 
 class FEN:
     """
     Class to hold and interpret a FEN code
 
-    valid: bool used to check if the FEN code is valid
+    valid: Tuple[bool, bool] first is used to check if the FEN code is valid
+                             the second is used to check if the board is valid
+                             and can be printed
 
-    The later fields are only valid if valid is True
-
-    board_valid: bool used to check if the board is valid, used to check
-        if the board can be printed
+    The later fields are only valid if valid[0] is True
 
     rows: tuple[str, ...] the rows of the chess board, can index using [0-7][0-7]
     turns: str the color to go next
     castling: str the castling rights
     en_passant: str the en passant square
-    half_move_clock: int the half move clock
-    full_move_number: int the full move number
+    half_and_full_move_clock: Tuple[int, int] the half move and full move clock
     str(FEN): str returns the FEN code
 
     a board is considered valid if the analysis board button is
@@ -48,85 +46,49 @@ class FEN:
 
         def __check_row(row: list[Piece]) -> bool:
             """Check a row for validity"""
+            return not (len(row) != 8 or False in [c in Piece for c in row])
 
-            if len(row) != 8:
-                return False
-            for c in row:
-                if not c in Piece:
-                    return False
-            return True
+        if len(fields) != 6 or len(rows) != 8 or False in [__check_row(row) for row in rows]:
+            return False
 
-        if len(fields) != 6:
-            return False
-        if len(rows) != 8:
-            return False
-        for row in rows:
-            if not __check_row(row):
-                return False
+        # Check turns field
+        # Check castling field
+        # Check en passant field
+        # Check half move clock field and full move clock field
+        return not (len(fields[1]) != 1 and fields[1].lower() not in "wb" or
+                    False in [x in "-kq" for x in fields[2].lower()] or
+                    not fields[3].lower()[0] in "-abcdefgh" or
+                    len(fields[3]) == 2 and fields[3][1] not in "12345678" or
+                    not fields[4].isdigit() or not fields[5].isdigit())
 
-        """Check turns field"""
-        if len(fields[1]) != 1 and fields[1].lower() not in "wb":
-            return False
-        """Check castling field"""
-        if False in [x in "-kq" for x in fields[2].lower()]:
-            return False
-        """Check en passant field"""
-        if not fields[3].lower()[0] in "-abcdefgh":
-            return False
-        if len(fields[3]) == 2 and fields[3][1] not in "12345678":
-            return False
-        """Check half move clock field and full move clock field"""
-        if not fields[4].isdigit() or not fields[5].isdigit():
-            return False
-        return True
-
-    @staticmethod
-    def __check_board(fields: list[str], rows: list[list[Piece]]) -> bool:
+    def __check_board(self, fields: list[str], rows: list[list[Piece]]) -> bool:
         """Chess piece checks"""
 
-        """Each side can only have 1 king"""
+        # Each side can only have 1 king
         if fields[0].count("k") != 1 or fields[0].count("K") != 1:
             return False
 
-        """Pawn on row 0 or 7 check"""
-        if Piece.BP in rows[0] or Piece.BP in rows[7] or Piece.WP in rows[0] or Piece.WP in rows[7]:
+        # Pawn on row 0 or 7 check
+        if any(i in rows[0] + rows[7] for i in [Piece.BP, Piece.WP]):
             return False
 
-        """Opposing kings can't be next to nor diagonal from each other"""
-        rows_concatinated: list[Piece] = [x for row in rows for x in row]
-        i: int = int(rows_concatinated.index(Piece.BK) / 8)
-        j: int = rows_concatinated.index(Piece.BK) % 8
-        if i > 0 and rows[i - 1][j] is Piece.WK:
-            return False
-        if i < 7 and rows[i + 1][j] is Piece.WK:
-            return False
-        if j > 0 and rows[i][j - 1] is Piece.WK:
-            return False
-        if j < 7 and rows[i][j + 1] is Piece.WK:
-            return False
-        if i > 0 and j > 0 and rows[i - 1][j - 1] is Piece.WK:
-            return False
-        if i > 0 and j < 7 and rows[i - 1][j + 1] is Piece.WK:
-            return False
-        if i < 7 and j > 0 and rows[i + 1][j - 1] is Piece.WK:
-            return False
-        if i < 7 and j < 7 and rows[i + 1][j + 1] is Piece.WK:
+        # Opposing kings can't be next to nor diagonal from each other
+        index: int = [x for row in rows for x in row].index(Piece.BK)
+        if Piece.WK in self[Piece.get_valid_king_moves(Coordinates(int(index / 8), index % 8))]:
             return False
         return True
 
     def __init__(self, fen: str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         """Initalize and verify a FEN, default fen is the default chess board"""
 
-        self.valid: bool = False
-        self.board_valid: bool = False
+        self.valid: Tuple[bool, bool] = (False, False)
         self.rows: numpy.ndarray = numpy.zeros((8, 8), dtype=Piece)
         self.turns: str = ""
         self.castling: str = ""
         self.en_passant: str = ""
-        self.half_move_clock: int = 0
-        self.full_move_number: int = 0
+        self.half_and_full_move_clock: Tuple[int, int] = (0, 0)
 
-        '''Fen code as we received it if we need to print an error'''
+        # Fen code as we received it if we need to print an error
         self.__fen: str = fen
 
         fields: "list[str]" = list(
@@ -138,75 +100,74 @@ class FEN:
         rows: "list[list[Piece]]" = []
         for row in fields[0].split("/"):
             currrow: list[Piece] = []
-            for x in row:
-                if x.isdigit():
-                    for _ in range(int(x)):
+            for char in row:
+                if char.isdigit():
+                    for _ in range(int(char)):
                         currrow.append(Piece.NONE)
-                elif x.lower() in "prbnqk":
-                    currrow.append(str_to_piece[x])
+                elif char.lower() in "prbnqk":
+                    currrow.append(str_to_piece[char])
             rows.insert(0, currrow)
 
         if FEN.__check_syntax(fields, rows) is False:
             return
 
-        self.board_valid: bool = True
+        self.valid: Tuple[bool, bool] = (False, True)
         self.rows: numpy.ndarray = numpy.array(rows)
         self.turns: str = fields[1]
         self.castling: str = fields[2]
         self.en_passant: str = fields[3]
-        self.half_move_clock: int = int(fields[4])
-        self.full_move_number: int = int(fields[5])
+        self.half_and_full_move_clock: Tuple[int, int] = (
+            int(fields[4]), int(fields[5]))
 
-        if FEN.__check_board(fields, rows) is False:
+        if self.__check_board(fields, rows) is False:
             return
 
-        self.valid: bool = True
+        self.valid: Tuple[bool, bool] = (True, True)
 
     def get_fen(self) -> str:
         """Get the FEN code"""
-        try:
-            board: list[str] = []
+        if not self.valid[0]:
+            return self.__fen
+        board: list[str] = []
 
-            for row in list(reversed(self.rows)):
-                currow: str = ""
-                count: int = 0
-                for piece in row:
-                    if piece is Piece.NONE:
-                        count += 1
-                        continue
-                    if count > 0:
-                        currow += str(count)
-                        count = 0
-                    currow += piece_to_str[piece]
+        for row in list(reversed(self.rows)):
+            currow: str = ""
+            count: int = 0
+            for piece in row:
+                if piece is Piece.NONE:
+                    count += 1
+                    continue
                 if count > 0:
                     currow += str(count)
-                board.append(currow)
+                    count = 0
+                currow += piece_to_str[piece]
+            if count > 0:
+                currow += str(count)
+            board.append(currow)
 
-            return " ".join([
-                "/".join(board),
-                self.turns,
-                self.castling,
-                self.en_passant,
-                str(self.half_move_clock),
-                str(self.full_move_number)
-            ])
-        except:
-            return self.__fen
+        return " ".join([
+            "/".join(board),
+            self.turns,
+            self.castling,
+            self.en_passant,
+            str(self.half_and_full_move_clock[0]),
+            str(self.half_and_full_move_clock[1])
+        ])
 
     def __str__(self) -> str:
         return self.get_fen()
 
-    def __getitem__(self, key: "str | int | Coordinates") -> Piece:
+    def __getitem__(self, key: "str | int | Coordinates | list[Coordinates]") -> Piece:
         """
         Returns either the row or piece.
         Can be indexed using 1-8 or a-h or using algebraic notation a8
         """
+        if isinstance(key, list):
+            return [self.__getitem__(x) for x in key]
         if isinstance(key, Coordinates):
             return self.rows[key.file][key.rank]
         if (isinstance(key, int) or key.isdigit()) and int(key) in range(8):
             return self.rows[int(key)]
-        if not isinstance(key, str):
-            return ""
         if len(key) == 1 and key[0].lower() in "abcdefg":
             return self.rows[:, ord(key[0].lower()) - ord('a')]
         if len(key) == 2 and key[0].lower() in "abcdefg" and int(key[1]) in range(8):
@@ -214,8 +175,9 @@ class FEN:
         return ""
 
     def print_board(self) -> str:
-        ret: str = f'{str(self)}\nValid:{str(self.valid)}\n'
-        if not self.board_valid:
+        """Pretty print the board"""
+        ret: str = f'{str(self)}\nValid:{str(self.valid[0])}\n'
+        if not self.valid[1]:
             return ret
         for i in range(7, -1, -1):
             for piece in self.rows[i]:
@@ -226,8 +188,8 @@ class FEN:
             ret += f'Castling: {self.castling}\n'
         if self.en_passant != "-":
             ret += f'En passant: {self.en_passant}\n'
-        ret += f'Half move clock: {str(self.half_move_clock)}\n'
-        ret += f'Full move number: {str(self.full_move_number)}\n'
+        ret += f'Half move clock: {str(self.half_and_full_move_clock[0])}\n'
+        ret += f'Full move number: {str(self.half_and_full_move_clock[1])}\n'
         return ret
 
 
@@ -277,50 +239,50 @@ class TestFenCases(unittest.TestCase):
     ]
 
     def test_default(self):
+        """Test default FENs"""
         localfen: FEN = FEN()
-        print(localfen.print_board())
-        self.assertTrue(localfen.valid)
+        board: str = localfen.print_board()
+        self.assertTrue(localfen.valid[0], board)
         self.assertEqual(
-            localfen.get_fen(), "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+            localfen.get_fen(), "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", board)
 
     def test_valid(self):
+        """Test known valid FENs"""
         for fen in self.validfens:
             localfen: FEN = FEN(fen)
-            print(localfen.print_board())
-            self.assertTrue(localfen.valid)
-            self.assertEqual(localfen.get_fen(), fen)
+            board: str = localfen.print_board()
+            self.assertTrue(localfen.valid[0], board)
+            self.assertEqual(localfen.get_fen(), fen, board)
 
     def test_invalid(self):
+        """Test invalid FENs"""
         for fen in self.invalidfens:
             localfen: FEN = FEN(fen)
-            print(localfen.print_board())
-            self.assertFalse(localfen.valid)
-            self.assertEqual(localfen.get_fen(), fen)
+            board: str = localfen.print_board()
+            self.assertFalse(localfen.valid[0], board)
+            self.assertEqual(localfen.get_fen(), fen, board)
 
     def test_indexing(self):
+        """Test indexing into a FEN code"""
         fen: FEN = FEN()
         expected = Piece.WR
         actual = fen[Coordinates(0, 0)]
-        print(f'Expected: {expected}\n'
-              f'Actual: {actual}', flush=True)
-        self.assertEqual(expected, actual)
+        self.assertEqual(expected, actual, f'Expected: {expected}\n'
+                         f'Actual: {actual}')
         expected = Piece.BR
         actual = fen["a7"]
-        print(f'Expected: {expected}\n'
-              f'Actual: {actual}', flush=True)
-        self.assertEqual(expected, actual)
+        self.assertEqual(expected, actual, f'Expected: {expected}\n'
+                         f'Actual: {actual}')
         expected = fen["a"]
         actual = numpy.array([Piece.WR, Piece.WP,
                               Piece.NONE, Piece.NONE, Piece.NONE, Piece.NONE, Piece.BP, Piece.BR])
-        print(f'Expected: {expected}\n'
-              f'Actual: {actual}', flush=True)
-        self.assertTrue(numpy.array_equal(expected, actual))
+        self.assertTrue(numpy.array_equal(expected, actual), f'Expected: {expected}\n'
+                        f'Actual: {actual}')
         expected = fen["7"]
         actual = numpy.array([Piece.BR, Piece.BN,
                               Piece.BB, Piece.BQ, Piece.BK, Piece.BB, Piece.BN, Piece.BR])
-        print(f'Expected: {expected}\n'
-              f'Actual: {actual}', flush=True)
-        self.assertTrue(numpy.array_equal(expected, actual))
+        self.assertTrue(numpy.array_equal(expected, actual), f'Expected: {expected}\n'
+                        f'Actual: {actual}')
 
 
 if __name__ == "__main__":
