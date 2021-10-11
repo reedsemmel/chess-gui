@@ -13,7 +13,6 @@ Description:
 """
 
 from typing import Tuple, Union
-import unittest
 import numpy
 from utils import Piece, Coordinates
 
@@ -235,97 +234,95 @@ class FEN:
         return ret
 
 
-class TestFenCases(unittest.TestCase):
-    """
-    unit tests to check the validity of the FEN code
-    """
+if __name__ == "__main__":
+    import unittest
 
-    validfens: list[str] = [
-        # Examples presented on wikipedia
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-        "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
-        "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2",
-        "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
-        "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
+    class TestFenCases(unittest.TestCase):
+        """unit tests to check the validity of the FEN code"""
 
-        # Weird cases
-        "7k/RRRRRRR1/RRRRRRR1/RRRRRRR1/RRRRRRR1/RRRRRRR1/RRRRRRR1/RRRRRRRK w - - 0 1",
-        "QNQNQN1k/NQNQN1N1/QNQNQN1N/NQNQNQNQ/QNQNQNQN/NQNQNQNQ/QNQNQNQN/NQNQNQNK w - - 0 1",
-    ]
+        validfens: list[str] = [
+            # Examples presented on wikipedia
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+            "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2",
+            "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
+            "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
 
-    invalidfens: list[str] = [
-        # Invalid strings
-        "",
-        "A",
+            # Weird cases
+            "7k/RRRRRRR1/RRRRRRR1/RRRRRRR1/RRRRRRR1/RRRRRRR1/RRRRRRR1/RRRRRRRK w - - 0 1",
+            "QNQNQN1k/NQNQN1N1/QNQNQN1N/NQNQNQNQ/QNQNQNQN/NQNQNQNQ/QNQNQNQN/NQNQNQNK w - - 0 1",
+        ]
 
-        # Empty board
-        "8/8/8/8/8/8/8/8 w - - 0 1",
+        invalidfens: list[str] = [
+            # Invalid strings
+            "",
+            "A",
 
-        # Invalid row count
-        "rnbqkbnr/pp1pppp/8/2R5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
+            # Empty board
+            "8/8/8/8/8/8/8/8 w - - 0 1",
 
-        # Double queens, no kings
-        "rnbqqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQQBNR w KQkq - 0 1",
+            # Invalid row count
+            "rnbqkbnr/pp1pppp/8/2R5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
 
-        # Double kings
-        "rnbkkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKKBNR w KQkq - 0 1",
+            # Double queens, no kings
+            "rnbqqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQQBNR w KQkq - 0 1",
 
-        # Pawns on row 0 or 7
-        "P6k/8/8/8/8/8/8/7K w - - 0 1",
-        "7k/8/8/8/8/8/8/P6K w - - 0 1",
+            # Double kings
+            "rnbkkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKKBNR w KQkq - 0 1",
 
-        # Adjacent kings
-        "8/8/8/8/8/8/8/6kK w - - 0 1",
-        "k7/1K6/8/8/8/8/8/8 w - - 0 1",
-        "8/1k6/2K5/8/8/8/8/8 w - - 0 1"
-    ]
+            # Pawns on row 0 or 7
+            "P6k/8/8/8/8/8/8/7K w - - 0 1",
+            "7k/8/8/8/8/8/8/P6K w - - 0 1",
 
-    def test_default(self):
-        """Test default FENs"""
-        local_fen: FEN = FEN()
-        board: str = local_fen.print_board()
-        self.assertTrue(local_fen.valid[0], board)
-        self.assertEqual(
-            local_fen.get_fen(), "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", board)
+            # Adjacent kings
+            "8/8/8/8/8/8/8/6kK w - - 0 1",
+            "k7/1K6/8/8/8/8/8/8 w - - 0 1",
+            "8/1k6/2K5/8/8/8/8/8 w - - 0 1"
+        ]
 
-    def test_valid(self):
-        """Test known valid FENs"""
-        for fen in self.validfens:
-            local_fen: FEN = FEN(fen)
+        def test_default(self):
+            """Test default FENs"""
+            local_fen: FEN = FEN()
             board: str = local_fen.print_board()
             self.assertTrue(local_fen.valid[0], board)
-            self.assertEqual(local_fen.get_fen(), fen, board)
+            self.assertEqual(
+                local_fen.get_fen(), "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", board)
 
-    def test_invalid(self):
-        """Test invalid FENs"""
-        for fen in self.invalidfens:
-            local_fen: FEN = FEN(fen)
-            board: str = local_fen.print_board()
-            self.assertFalse(local_fen.valid[0], board)
-            self.assertEqual(local_fen.get_fen(), fen, board)
+        def test_valid(self):
+            """Test known valid FENs"""
+            for fen in self.validfens:
+                local_fen: FEN = FEN(fen)
+                board: str = local_fen.print_board()
+                self.assertTrue(local_fen.valid[0], board)
+                self.assertEqual(local_fen.get_fen(), fen, board)
 
-    def test_indexing(self):
-        """Test indexing into a FEN code"""
-        fen: FEN = FEN()
-        expected = Piece.WR
-        actual = fen[Coordinates(0, 0)]
-        self.assertEqual(expected, actual, f'Expected: {expected}\n'
-                         f'Actual: {actual}')
-        expected = Piece.BR
-        actual = fen["a7"]
-        self.assertEqual(expected, actual, f'Expected: {expected}\n'
-                         f'Actual: {actual}')
-        expected = fen["a"]
-        actual = numpy.array([Piece.WR, Piece.WP,
-                              Piece.NONE, Piece.NONE, Piece.NONE, Piece.NONE, Piece.BP, Piece.BR])
-        self.assertTrue(numpy.array_equal(expected, actual), f'Expected: {expected}\n'
-                        f'Actual: {actual}')
-        expected = fen["7"]
-        actual = numpy.array([Piece.BR, Piece.BN,
-                              Piece.BB, Piece.BQ, Piece.BK, Piece.BB, Piece.BN, Piece.BR])
-        self.assertTrue(numpy.array_equal(expected, actual), f'Expected: {expected}\n'
-                        f'Actual: {actual}')
+        def test_invalid(self):
+            """Test invalid FENs"""
+            for fen in self.invalidfens:
+                local_fen: FEN = FEN(fen)
+                board: str = local_fen.print_board()
+                self.assertFalse(local_fen.valid[0], board)
+                self.assertEqual(local_fen.get_fen(), fen, board)
 
-
-if __name__ == "__main__":
+        def test_indexing(self):
+            """Test indexing into a FEN code"""
+            fen: FEN = FEN()
+            expected = Piece.WR
+            actual = fen[Coordinates(0, 0)]
+            self.assertEqual(expected, actual, f'Expected: {expected}\n'
+                             f'Actual: {actual}')
+            expected = Piece.BR
+            actual = fen["a7"]
+            self.assertEqual(expected, actual, f'Expected: {expected}\n'
+                             f'Actual: {actual}')
+            expected = fen["a"]
+            actual = numpy.array([Piece.WR, Piece.WP,
+                                  Piece.NONE, Piece.NONE, Piece.NONE, Piece.NONE, Piece.BP, Piece.BR])
+            self.assertTrue(numpy.array_equal(expected, actual), f'Expected: {expected}\n'
+                            f'Actual: {actual}')
+            expected = fen["7"]
+            actual = numpy.array([Piece.BR, Piece.BN,
+                                  Piece.BB, Piece.BQ, Piece.BK, Piece.BB, Piece.BN, Piece.BR])
+            self.assertTrue(numpy.array_equal(expected, actual), f'Expected: {expected}\n'
+                            f'Actual: {actual}')
     unittest.main()
