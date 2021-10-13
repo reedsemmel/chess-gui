@@ -106,6 +106,7 @@ class GameWindow(QMainWindow):
             Any auto saving would want to be triggered here.
         """
         close_confirmation: QMessageBox = QMessageBox()
+        close_confirmation.setWindowIcon(self.windowIcon())
         close_confirmation.setWindowTitle("Quit")
         close_confirmation.setText("Are you sure you want to quit?")
         close_confirmation.setStandardButtons(QMessageBox.Yes
