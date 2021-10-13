@@ -14,11 +14,12 @@ Description:
 import sys
 
 from enum import Enum
+from random import randint
 from PyQt5.QtGui import QCloseEvent, QIcon
 from PyQt5.QtWidgets import QAction, QApplication, QMainWindow, QMenu, QMessageBox, QWidget
 
 from screens import EndGameScreen, GameScreen, MainMenuScreen, SettingsScreen
-from utils import Settings
+from utils import Piece, Settings
 
 class GameWindow(QMainWindow):
     """Main Window for the game that will house all the GUI elements."""
@@ -166,6 +167,7 @@ class GameWindow(QMainWindow):
     def _set_window_properties(self) -> None:
         """Sets the properties of the window such as size and title."""
         self.setGeometry(0, 0, 853, 480)
+        self.setWindowIcon(QIcon(Piece.get_piece_pixmap(Piece(randint(1, 12)))))
         self.setWindowTitle("Chess")
 
 if __name__ == '__main__':
