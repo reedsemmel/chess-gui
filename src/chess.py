@@ -106,7 +106,7 @@ class Chess:
     #         True if white is in check else False
     def is_in_check(self) -> Tuple[bool, bool]:
         """check if the king is in check"""
-        return self.curent_fen.is_in_check()
+        return FEN.is_in_check(self.curent_fen)
 
     # TODO: this function
     # Design: check if we have a king in checkmate
@@ -114,7 +114,7 @@ class Chess:
     #         and True if white is in check else False
     def is_in_checkmate(self) -> Tuple[bool, bool]:
         """check if the king is in checkmate"""
-        return self.curent_fen.is_in_checkmate()
+        return FEN.is_in_checkmate(self.curent_fen)
 
     def get_state(self) -> ChessState:
         """Return the current game state"""

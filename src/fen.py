@@ -217,20 +217,20 @@ class FEN:
 
     def print_board(self) -> str:
         """Pretty print the board"""
-        ret: str = f'{str(self)}\nValid:{str(self.valid[0])}\n'
+        ret: str = f"{str(self)}\nValid:{str(self.valid[0])}\n"
         if not self.valid[1]:
             return ret
         for i in range(7, -1, -1):
             for piece in self.rows[i]:
-                ret += f'│\033[4m{str(piece)}\033[0m'
-            ret += '│\n'
-        ret += f'{"W" if self.turns == "w" else "B"} to go\n'
+                ret += f"│\033[4m{str(piece)}\033[0m"
+            ret += "│\n"
+        ret += f"{'W' if self.turns == 'w' else 'B'} to go\n"
         if self.castling != "-":
-            ret += f'Castling: {self.castling}\n'
+            ret += f"Castling: {self.castling}\n"
         if self.en_passant != "-":
-            ret += f'En passant: {self.en_passant}\n'
-        ret += f'Half move clock: {str(self.half_and_full_move_clock[0])}\n'
-        ret += f'Full move number: {str(self.half_and_full_move_clock[1])}\n'
+            ret += f"En passant: {self.en_passant}\n"
+        ret += f"Half move clock: {str(self.half_and_full_move_clock[0])}\n"
+        ret += f"Full move number: {str(self.half_and_full_move_clock[1])}\n"
         return ret
 
 
