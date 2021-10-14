@@ -106,7 +106,6 @@ class GameWindow(QMainWindow):
             Any auto saving would want to be triggered here.
         """
         close_confirmation: QMessageBox = QMessageBox()
-        close_confirmation.setWindowIcon(self.windowIcon())
         close_confirmation.setWindowTitle("Quit")
         close_confirmation.setText("Are you sure you want to quit?")
         close_confirmation.setStandardButtons(QMessageBox.Yes
@@ -168,11 +167,11 @@ class GameWindow(QMainWindow):
     def _set_window_properties(self) -> None:
         """Sets the properties of the window such as size and title."""
         self.setGeometry(0, 0, 853, 480)
-        self.setWindowIcon(QIcon(Piece.get_piece_pixmap(Piece(randint(1, 12)))))
         self.setWindowTitle("Chess")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon(Piece.get_piece_pixmap(Piece(randint(1, 12)))))
 
     game_window: GameWindow = GameWindow()
     game_window.show()
