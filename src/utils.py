@@ -42,6 +42,13 @@ class Coordinates(NamedTuple):
         """Returns true if the coordinates are valid on a 8x8 board"""
         return self.file in range(8) and self.rank in range(8)
 
+    def __str__(self) -> str:
+        """Converts the Coordinate into the traditional chess notation"""
+        if self.is_valid():
+            # The file is a letter a-h and the rank is a number 1-8
+            return f"{chr(ord('a') + self.file)}{self.rank + 1}"
+        else:
+            return "00"
 
 @unique
 class Piece(Enum):
