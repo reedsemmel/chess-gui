@@ -13,6 +13,7 @@ Description:
 
 import sys
 
+from datetime import datetime
 from enum import Enum
 from random import randint
 from PyQt5.QtGui import QCloseEvent, QIcon
@@ -91,8 +92,9 @@ class GameWindow(QMainWindow):
             """Any actions to preserve game state would want to run here."""
             if self.state == self.State.GAME:
                 self.state: self.State = self.State.SAVING
+                current_datetime_string: str = str(datetime.now()).replace(" ", "_")
                 filename: "tuple[str, str]" = QFileDialog.getSaveFileName(self.parent, "Save File",
-                    "chess_game")
+                    f"chess_game_{current_datetime_string}")
                 if filename[0] != "":
                     with open(filename[0], "wt", encoding="utf-8") as save_file:
                         save_file.write(str(self.game_ui.save()))
