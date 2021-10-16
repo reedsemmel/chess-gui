@@ -91,7 +91,7 @@ class GameWindow(QMainWindow):
             """Any actions to preserve game state would want to run here."""
             if self.state == self.State.GAME:
                 self.state: self.State = self.State.SAVING
-                filename: str = QFileDialog.getSaveFileName(self.parent, "Save File", "chess_game")
+                filename: "tuple[str, str]" = QFileDialog.getSaveFileName(self.parent, "Save File", "chess_game")
                 with open(filename[0], "wt", encoding="utf-8") as save_file:
                     save_file.write(str(self.game_ui.save()))
                 self.state: self.State = self.State.GAME
