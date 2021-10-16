@@ -13,10 +13,12 @@ Description:
 
 import sys
 
+from datetime import datetime
 from enum import Enum
 from random import randint
 from PyQt5.QtGui import QCloseEvent, QIcon
-from PyQt5.QtWidgets import QAction, QApplication, QMainWindow, QMenu, QMessageBox, QWidget
+from PyQt5.QtWidgets import QAction, QApplication, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QMenu, QMessageBox, QWidget
 
 from screens import EndGameScreen, GameScreen, MainMenuScreen, SettingsScreen
 from utils import Piece, Settings
@@ -90,7 +92,12 @@ class GameWindow(QMainWindow):
             """Any actions to preserve game state would want to run here."""
             if self.state == self.State.GAME:
                 self.state: self.State = self.State.SAVING
-                # Do saving stuff
+                current_datetime_string: str = str(datetime.now()).replace(" ", "_")
+                filename: "tuple[str, str]" = QFileDialog.getSaveFileName(self.parent, "Save File",
+                    f"chess_game_{current_datetime_string}")
+                if filename[0] != "":
+                    with open(filename[0], "wt", encoding="utf-8") as save_file:
+                        save_file.write(str(self.game_ui.save()))
                 self.state: self.State = self.State.GAME
 
     def __init__(self) -> None:
@@ -112,7 +119,6 @@ class GameWindow(QMainWindow):
             | QMessageBox.No)
         close_decision: QMessageBox.StandardButton = close_confirmation.exec()
         if close_decision == QMessageBox.Yes:
-            self.save_event()
             return super().closeEvent(event)
         event.ignore()
         return None
