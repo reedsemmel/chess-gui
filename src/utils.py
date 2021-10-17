@@ -213,6 +213,9 @@ class Piece(Enum):
         }
         return str_to_piece[piece_str]
 
+    def __int__(self) -> int:
+        return self.value
+
     def __str__(self) -> str:
         piece_to_str: "dict[Piece, str]" = {
             Piece.NONE: ' ',
@@ -237,6 +240,9 @@ class Player(Enum):
     """Identifier for the two players in a game."""
     P1 = 0
     P2 = 1
+
+    def __int__(self) -> int:
+        return self.value
 
 
 class Settings:
