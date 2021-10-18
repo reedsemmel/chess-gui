@@ -13,6 +13,7 @@ Description:
 
 import sys
 
+from ast import literal_eval
 from datetime import datetime
 from enum import Enum
 from random import randint
@@ -64,9 +65,15 @@ class GameWindow(QMainWindow):
             """Any actions to load from a previously saved game state would want to run here."""
             if self.state in (self.State.MAIN_MENU, self.State.GAME):
                 self.state: self.State = self.State.LOADING
-                self.game_ui: GameScreen = GameScreen(self.settings, self.parent)
-                self.state: self.State = self.State.GAME
-                self.parent.setCentralWidget(self.game_ui)
+                filename: "tuple[str, str]" = QFileDialog.getOpenFileName(self.parent, "Open File")
+                if filename[0] != "":
+                    self.game_ui: GameScreen = GameScreen(self.settings, self.parent)
+                    with open(filename[0], "rt", encoding="utf-8") as load_file:
+                        self.game_ui.load(literal_eval(load_file.readline()))
+                    self.state: self.State = self.State.GAME
+                    self.parent.setCentralWidget(self.game_ui)
+                else:
+                    self.state: self.State = self.State.MAIN_MENU
 
         def open_settings(self) -> None:
             """Any actions to open the settings screen would want to run here."""
@@ -79,7 +86,10 @@ class GameWindow(QMainWindow):
         def play(self) -> None:
             """Starts a new game."""
             if self.state == self.State.MAIN_MENU:
-                self.load()
+                self.state: self.State = self.State.LOADING
+                self.game_ui: GameScreen = GameScreen(self.settings, self.parent)
+                self.state: self.State = self.State.GAME
+                self.parent.setCentralWidget(self.game_ui)
 
         def run(self) -> None:
             """Create the window and initializes all of the game componenets."""

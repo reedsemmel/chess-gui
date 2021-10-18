@@ -103,14 +103,14 @@ class GameScreen(QWidget):
             piece_image.setScaledContents(True)
             self.layout.addWidget(piece_image)
 
-        def export_pieces(self) -> "tuple[Piece]":
+        def export_pieces(self) -> "tuple[int]":
             """Returns tuple of current pieces in the bar."""
-            return tuple(self.pieces)
+            return tuple(int(piece) for piece in self.pieces)
 
-        def import_pieces(self, pieces: "tuple[Piece]") -> None:
+        def import_pieces(self, pieces: "tuple[int]") -> None:
             """Sets the current pieces in the bar."""
             for piece in pieces:
-                self.add_piece(piece)
+                self.add_piece(Piece(piece))
 
         def resizeEvent(self, a0: QResizeEvent) -> None: # pylint: disable=invalid-name
             """Controls resizing to ensure the child widgets in the layout stay square."""
@@ -145,15 +145,15 @@ class GameScreen(QWidget):
         """Adds captured piece to specified player's captured bar."""
         self.players[player].add_piece(piece)
 
-    def load(self, states: "tuple[tuple[Player, tuple[Piece]], tuple[Player, tuple[Piece]]]") -> None: # pylint: disable=line-too-long
+    def load(self, states: "tuple[tuple[int, tuple[int]], tuple[int, tuple[int]]]") -> None: # pylint: disable=line-too-long
         """Any actions to restore previously preserved game would want to run here."""
         for (player, pieces) in states:
-            self.players[player].import_pieces(pieces)
+            self.players[Player(player)].import_pieces(pieces)
 
-    def save(self)-> "tuple[tuple[Player, tuple[Piece]], tuple[Player, tuple[Piece]]]":
+    def save(self)-> "tuple[tuple[int, tuple[int]], tuple[int, tuple[int]]]":
         """Any actions to preserve the game state would want to run here."""
-        return ((Player.P1, self.players[Player.P1].export_pieces()),
-            (Player.P2, self.players[Player.P2].export_pieces()))
+        return ((int(Player.P1), self.players[Player.P1].export_pieces()),
+            (int(Player.P2), self.players[Player.P2].export_pieces()))
 
     # def test_capture(self) -> None:
     #     self.capture_piece(Piece.WB, Player.P1)
