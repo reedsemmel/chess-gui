@@ -19,18 +19,24 @@ class Board:
         self._grid: List[List[Piece]] = [[Piece.NONE for _ in range(8)] for _ in range(8)]
 
     def __getitem__(self, coord: Coordinates):
-        if coord.is_valid:
-            return self._grid[coord.file][coord.rank]
-        else:
-            # This class is a low level primitive. Users of the class should
-            # validate that the coords are in bounds.
-            raise IndexError
+        # This is a low level primitive, caller should verify that the coords
+        # are valid
+        assert coord.is_valid
+        return self._grid[coord.file][coord.rank]
 
+    def __setitem__(self, coord: Coordinates, piece: Piece):
+        assert coord.is_valid
+        self._grid[coord.file][coord.rank] = piece
+
+    @staticmethod
     def new_empty_board():
+        """Creates a new empty board"""
         return Board()
 
+    @staticmethod
     def new_default_board():
-        b = Board()
+        """Creates a new board in the starting position"""
+        board = Board()
 
         black_pieces = [Piece.BR, Piece.BN, Piece.BB, Piece.BQ, Piece.BK,
             Piece.BB, Piece.BN, Piece.BR]
@@ -40,12 +46,25 @@ class Board:
             Piece.WB, Piece.WN, Piece.WR]
 
         for file in range(8):
-            b[Coordinates(file, 7)] = black_pieces[file]
-            b[Coordinates(file, 6)] = black_pawns[file]
-            b[Coordinates(file, 1)] = white_pawns[file]
-            b[Coordinates(file, 0)] = white_pieces[file]
+            board[Coordinates(file, 7)] = black_pieces[file]
+            board[Coordinates(file, 6)] = black_pawns[file]
+            board[Coordinates(file, 1)] = white_pawns[file]
+            board[Coordinates(file, 0)] = white_pieces[file]
 
-        return b
+        return board
+
+    def find_king(self, player: Player) -> Coordinates:
+        """Returns the coordinates of the players king"""
+        king_piece = Piece.WK if player == Player.P1 else Piece.BK
+        for file in range(8):
+            for rank in range(8):
+                coord = Coordinates(file, rank)
+                if self[coord] == king_piece:
+                    return coord
+
+        # If we get here this means there isn't a king on the board, which
+        # shouldn't be possible.
+        assert False
 
 
 class ChessState(NamedTuple):
@@ -147,8 +166,8 @@ class Chess:
         """Return the current game state"""
         return self.state
 
-    def piece_at(self, coord: Coordinates):
+    def piece_at(self, coord: Coordinates) -> Piece:
+        """Gets the piece at the coordinates for the current state"""
         if coord.is_valid:
             return self.state.board[coord]
-        else:
-            return Piece.NONE
+        return Piece.NONE

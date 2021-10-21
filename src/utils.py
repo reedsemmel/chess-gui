@@ -81,6 +81,28 @@ class Piece(Enum):
         }
         return piece_img[piece]
 
+    def is_on_side(self, player: "Player") -> bool:
+        """Returns True if the Piece is on the side of player"""
+        if (
+            player == Player.P1 and self == Piece.WR or Piece.WB or Piece.WN or
+            Piece.WQ or Piece.WK or Piece.WP
+        ):
+            return True
+        if (
+            player == Player.P2 and self == Piece.BR or Piece.BB or Piece.BN or
+            Piece.BQ or Piece.BK or Piece.BP
+        ):
+            return True
+        return False
+
+    def is_opponent(self, player: "Player") -> bool:
+        """Returns True if the Piece is an opponent's piece"""
+        if player == Player.P1:
+            opponent = Player.P2
+        else:
+            opponent = Player.P1
+        return self != Piece.NONE and not self.is_on_side(opponent)
+
     @staticmethod
     def get_valid_rook_moves(current: Coordinates) -> List[Coordinates]:
         """Returns a list of valid rook moves."""
