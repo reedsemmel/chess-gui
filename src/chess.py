@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Chris Degawa
+# Copyright (c) 2021 Chris Degawa, Reed Semmel
 # SPDX-License-Identifier: GPL-3.0-only
 
 """
@@ -13,6 +13,40 @@ from typing import List, NamedTuple, Optional, Tuple
 from fen import FEN
 from utils import Coordinates, Piece, Player
 
+class Board:
+    """A wrapper for an 8x8 list of pieces to use coordinates to index"""
+    def __init__(self):
+        self._grid: List[List[Piece]] = [[Piece.NONE for _ in range(8)] for _ in range(8)]
+
+    def __getitem__(self, coord: Coordinates):
+        if coord.is_valid:
+            return self._grid[coord.file][coord.rank]
+        else:
+            # This class is a low level primitive. Users of the class should
+            # validate that the coords are in bounds.
+            raise IndexError
+
+    def new_empty_board():
+        return Board()
+
+    def new_default_board():
+        b = Board()
+
+        black_pieces = [Piece.BR, Piece.BN, Piece.BB, Piece.BQ, Piece.BK,
+            Piece.BB, Piece.BN, Piece.BR]
+        black_pawns = [Piece.BP for _ in range(8)]
+        white_pawns = [Piece.WP for _ in range(8)]
+        white_pieces = [Piece.WR, Piece.WN, Piece.WB, Piece.WQ, Piece.WK,
+            Piece.WB, Piece.WN, Piece.WR]
+
+        for file in range(8):
+            b[Coordinates(file, 7)] = black_pieces[file]
+            b[Coordinates(file, 6)] = black_pawns[file]
+            b[Coordinates(file, 1)] = white_pawns[file]
+            b[Coordinates(file, 0)] = white_pieces[file]
+
+        return b
+
 
 class ChessState(NamedTuple):
     """Tuple of game state"""
@@ -21,14 +55,7 @@ class ChessState(NamedTuple):
     who_is_in_check: Optional[Player] = None
     is_stalemate: bool = False
     current_turn: Player = Player.P1
-    board: List[List[Piece]] = [[Piece.str_to_piece(x) for x in "rnbqkbnr"],
-                                [Piece.str_to_piece(x) for x in "pppppppp"],
-                                [Piece.str_to_piece(x) for x in "        "],
-                                [Piece.str_to_piece(x) for x in "        "],
-                                [Piece.str_to_piece(x) for x in "        "],
-                                [Piece.str_to_piece(x) for x in "        "],
-                                [Piece.str_to_piece(x) for x in "PPPPPPPP"],
-                                [Piece.str_to_piece(x) for x in "RNBQKBNR"]]
+    board: Board = Board.new_default_board()
 
 
 class Chess:
@@ -36,7 +63,7 @@ class Chess:
 
     def __init__(self):
         """initialize the chess board"""
-        self.board = [[None for _ in range(8)] for _ in range(8)]
+        self.state = ChessState()
         # Stores all of the moves in a game
         self.__last_moves: List[FEN] = []
         self.current_fen: FEN = FEN()
@@ -118,4 +145,10 @@ class Chess:
 
     def get_state(self) -> ChessState:
         """Return the current game state"""
-        return ChessState()
+        return self.state
+
+    def piece_at(self, coord: Coordinates):
+        if coord.is_valid:
+            return self.state.board[coord]
+        else:
+            return Piece.NONE
