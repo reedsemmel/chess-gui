@@ -65,7 +65,7 @@ class Coordinates:
         return Coordinates(self.file + other.file, self.rank + other.rank)
 
     def __mul__(self, scale: int) -> "Coordinates":
-        return  Coordinates(self.file * scale, self.rank * scale)
+        return Coordinates(self.file * scale, self.rank * scale)
 
     def __str__(self) -> str:
         """Returns the coordinates as a string"""

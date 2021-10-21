@@ -9,7 +9,7 @@ Description:
     Houses information and utilities for the basic chess game.
 """
 
-import copy
+from copy import deepcopy
 
 from typing import List
 from fen import FEN
@@ -44,10 +44,10 @@ class Board:
         assert coord.is_valid
         self._grid[coord.file][coord.rank] = piece
 
-    @staticmethod
+    @classmethod
     def new_empty_board():
         """Creates a new empty board"""
-        return Board()
+        return cls()
 
     @staticmethod
     def new_default_board():
@@ -102,7 +102,7 @@ class Board:
             new_coords = coords + offset
             # The move is only valid there is a blank or opponent tile on the new location
             if new_coords.is_valid() and not self[new_coords].is_on_side(player):
-                valid_moves.append(copy.deepcopy(new_coords))
+                valid_moves.append(new_coords)
         return valid_moves
 
     def generate_king_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
@@ -291,9 +291,9 @@ class Board:
 
     def prune_illegal_moves(self, moves: List[tuple[Coordinates, Coordinates]], player: Player):
         """Removes illegal moves from the list, which are moves that put yourself in check"""
-        moves_copy = copy.deepcopy(moves)
+        moves_copy = deepcopy(moves)
         for move in moves:
-            board_copy = copy.deepcopy(self)
+            board_copy = deepcopy(self)
             board_copy[move[1]] = board_copy[move[0]]
             board_copy[move[0]] = Piece.NONE
             if board_copy.is_in_check(player):
@@ -412,6 +412,4 @@ class Chess:
 
     def piece_at(self, coord: Coordinates) -> Piece:
         """Gets the piece at the coordinates for the current state"""
-        if coord.is_valid:
-            return self.state.board[coord]
-        return Piece.NONE
+        return self.state.board[coord] if coord.is_valid() else Piece.NONE
