@@ -24,23 +24,81 @@ File a b c d e f g h  Rank
 """
 
 from enum import Enum, unique
+from itertools import chain
 from re import fullmatch
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple
+from operator import attrgetter
+from typing import Any, Dict, List, Union
 
 from PyQt5.QtGui import QPixmap
 
 
-class Coordinates(NamedTuple):
+class Coordinates:
     """file and rank coordinate tuple"""
 
-    # self.file = file - ord('a')
-    file: int = -1
-    rank: int = -1
+    def __init__(self, alg_or_file: Union[str, int], rank: int = -1):
+        if isinstance(alg_or_file, str) and len(alg_or_file) == 2:
+            self.file = ord(alg_or_file[0]) - ord('a')
+            self.rank = int(alg_or_file[1]) - 1
+        elif isinstance(alg_or_file, int) and isinstance(rank, int):
+            self.file = alg_or_file
+            self.rank = rank
+        else:
+            self._file = -1
+            self._rank = -1
+
+    file = property(attrgetter('_file'))
+    rank = property(attrgetter('_rank'))
+
+    @file.setter
+    def file(self, value: int):
+        self._file = -1
+        if value in range(8):
+            self._file = value
+        else:
+            self._rank = -1
+
+    @rank.setter
+    def rank(self, value: int):
+        self._rank = -1
+        if value in range(8):
+            self._rank = value
+        else:
+            self._file = -1
 
     def is_valid(self) -> bool:
         """Returns true if the coordinates are valid on a 8x8 board"""
         return self.file in range(8) and self.rank in range(8)
+
+    def __str__(self) -> str:
+        """Returns the coordinates as a string"""
+        return f"{chr(ord('a') + self._file)}{self._rank}" if self.is_valid() else "--"
+
+    def __eq__(self, other) -> bool:
+        """Comparison function"""
+        if isinstance(other, Coordinates):
+            return self.file == other.file and self.rank == other.rank
+        return False
+
+    def __lt__(self, other) -> bool:
+        """Comparison function"""
+        if isinstance(other, Coordinates):
+            if self.file == other.file:
+                return self.rank < other.rank
+            return self.file < other.file
+        return False
+
+    def __gt__(self, other) -> bool:
+        """Comparison function"""
+        if isinstance(other, Coordinates):
+            if self.file == other.file:
+                return self.rank > other.rank
+            return self.file > other.file
+        return False
+
+    def __repr__(self) -> str:
+        """Returns the coordinates as a string"""
+        return self.__str__()
 
 
 @unique
@@ -392,4 +450,34 @@ if __name__ == "__main__":
                     self.assertEqual(expected, actual, f'Pawn {coord} {is_white}\n'
                                      f'  Expected -> {expected}\n'
                                      f'  Actual   -> {actual}')
+
+    class CoordinatesUnitTest(unittest.TestCase):
+        """Unit tests for the Coordinates class."""
+
+        def test_is_valid(self):
+            """Tests the is_valid function."""
+            for file in range(8):
+                for rank in range(8):
+                    coord = Coordinates(file, rank)
+                    self.assertTrue(coord.is_valid(),
+                                    f'{coord} should be valid.')
+            for file in range(ord('a'), ord('h') + 1):
+                for rank in range(8):
+                    file_rank = chr(file) + str(rank + 1)
+                    coord = Coordinates(file_rank)
+                    self.assertTrue(coord.is_valid(),
+                                    f'{coord} should be valid.')
+
+        def test_is_not_valid(self):
+            """Test the is_valid function, but with false options"""
+            for file in (-1, 8):
+                for rank in range(8):
+                    coord = Coordinates(file, rank)
+                    self.assertFalse(coord.is_valid(),
+                                     f'{file},{rank} should be invalid.')
+            for file_rank in ('a9', 'z10'):
+                coord = Coordinates(file_rank)
+                self.assertFalse(coord.is_valid(),
+                                 f'{file_rank} should be invalid.')
+
     unittest.main()
