@@ -50,7 +50,7 @@ class InteractiveBoard(QWidget):
                 layout.addWidget(self.tile_grid[file][rank], 8 - rank, file)
                 # We also want to set the blank background so the CSS background
                 # colors properly show up.
-                self.tile_grid[file][rank].set_image(Piece.get_piece_pixmap(Piece.NONE))
+                self.tile_grid[file][rank].set_image(Piece.NONE)
 
         self.setLayout(layout)
         self.redraw_whole_board(self.chess.get_state().board._grid)
@@ -84,7 +84,7 @@ class InteractiveBoard(QWidget):
     def draw_piece(self, piece: Piece, file: int, rank: int) -> None:
         """Draws and replaced a piece on the board"""
         if file in range(0, 8) and rank in range(0, 8):
-            self.tile_grid[file][rank].set_image(Piece.get_piece_pixmap(piece))
+            self.tile_grid[file][rank].set_image(piece)
         else:
             print(f"Invalid index {file} {rank}")
 
@@ -118,6 +118,7 @@ class InteractiveBoard(QWidget):
             self.rank = rank
             # Holds the image we display
             self.label = QLabel(self)
+            self.current_piece = Piece.NONE
 
             # Chess is played on a checkered board. Adding the file and rank
             # index is an easy way to see which we are on
@@ -126,10 +127,13 @@ class InteractiveBoard(QWidget):
             else:
                 self.setStyleSheet(f"background-color: {settings.primary_color};")
 
-        def set_image(self, piece: QtGui.QPixmap):
+        def set_image(self, piece: Piece):
             """Sets the image in the tile to the one provided."""
-            self.label.setPixmap(piece)
-            self.label.adjustSize()
+            if piece == self.current_piece:
+                return
+            self.current_piece = piece
+            self.adjustSize()
+            self.label.setPixmap(Piece.get_piece_pixmap(self.current_piece).scaled(self.size()))
 
         def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None: # pylint: disable=invalid-name
             """Passes the click information to the parent widget along with the rank and file."""
@@ -139,8 +143,11 @@ class InteractiveBoard(QWidget):
         # fast enough and doesn't cause noticeable artifacts when resizing
         def resizeEvent(self, a0: QtGui.QResizeEvent) -> None: # pylint: disable=invalid-name
             """Resizes the label and image to fill the entire widget upon resizing"""
-            self.label.setPixmap(self.label.pixmap().scaled(a0.size()))
+            if a0.size().height() == 0 or a0.size().width() == 0:
+                return
+            self.label.setPixmap(Piece.get_piece_pixmap(self.current_piece).scaled(a0.size()))
             self.label.adjustSize()
+            self.adjustSize()
 
 # Basic testing code
 
