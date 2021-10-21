@@ -70,6 +70,8 @@ class InteractiveBoard(QWidget):
         if not self.current_selection.is_valid():
             if self.chess.piece_at(coord).is_on_side(self.chess.state.current_turn):
                 print(coord, ":", self.chess.get_valid_moves(coord))
+                for tile in self.chess.get_valid_moves(coord):
+                    self.tile_grid[tile.file][tile.rank].highlight_green()
                 self.current_selection = coord
             else:
                 print("that tile doesn't have one of the current turn's pieces on it")
@@ -78,6 +80,9 @@ class InteractiveBoard(QWidget):
                 self.chess.make_move(self.current_selection, coord)
                 self.redraw_whole_board(self.chess.get_state().board._grid)
             self.current_selection = Coordinates(-1, -1)
+            for file in self.tile_grid:
+                for tile in file:
+                    tile.remove_highlight()
 
 
     # Replaces the piece on (file, rank) with the piece provided
@@ -123,9 +128,20 @@ class InteractiveBoard(QWidget):
             # Chess is played on a checkered board. Adding the file and rank
             # index is an easy way to see which we are on
             if (self.file + self.rank) % 2:
-                self.setStyleSheet(f"background-color: {settings.secondary_color};")
+                self.color = settings.secondary_color
             else:
-                self.setStyleSheet(f"background-color: {settings.primary_color};")
+                self.color = settings.primary_color
+
+            self.setStyleSheet(f"background-color: {self.color};")
+
+        def highlight_green(self):
+            self.setStyleSheet("background-color: #22dd22;")
+
+        def highlight_red(self):
+            self.setStyleSheet("background-color: #dd2222;")
+
+        def remove_highlight(self):
+            self.setStyleSheet(f"background-color: {self.color};")
 
         def set_image(self, piece: Piece):
             """Sets the image in the tile to the one provided."""
