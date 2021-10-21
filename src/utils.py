@@ -51,19 +51,11 @@ class Coordinates:
 
     @file.setter
     def file(self, value: int):
-        self._file = -1
-        if value in range(8):
-            self._file = value
-        else:
-            self._rank = -1
+        self._file = value
 
     @rank.setter
     def rank(self, value: int):
-        self._rank = -1
-        if value in range(8):
-            self._rank = value
-        else:
-            self._file = -1
+        self._rank = value
 
     def is_valid(self) -> bool:
         """Returns true if the coordinates are valid on a 8x8 board"""
@@ -74,14 +66,6 @@ class Coordinates:
 
     def __mul__(self, scale: int) -> "Coordinates":
         return  Coordinates(self.file * scale, self.rank * scale)
-
-    def __str__(self) -> str:
-        """Converts the Coordinate into the traditional chess notation"""
-        if self.is_valid():
-            # The file is a letter a-h and the rank is a number 1-8
-            return f"{chr(ord('a') + self.file)}{self.rank + 1}"
-        else:
-            return "00"
 
     def __str__(self) -> str:
         """Returns the coordinates as a string"""
