@@ -15,6 +15,20 @@ from utils import Coordinates, Piece, Player
 
 class Board:
     """A wrapper for an 8x8 list of pieces to use coordinates to index"""
+
+    # Basic 8 directions in chess
+    directions = [
+        Coordinates(1, 0),
+        Coordinates(0, 1),
+        Coordinates(-1, 0),
+        Coordinates(0, -1),
+        Coordinates(1, 1),
+        Coordinates(-1, 1),
+        Coordinates(1, -1),
+        Coordinates(-1, -1),
+    ]
+
+
     def __init__(self):
         self._grid: List[List[Piece]] = [[Piece.NONE for _ in range(8)] for _ in range(8)]
 
@@ -66,6 +80,196 @@ class Board:
         # shouldn't be possible.
         assert False
 
+    def generate_knight_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
+        """Generates all the moves a knight can perform"""
+        assert coords.is_valid and self[coords].is_knight() and self[coords].is_on_side(player)
+        # Knights move in an L and can jump over pieces
+        knight_directions = [
+            Coordinates(1, 2),
+            Coordinates(-1, 2),
+            Coordinates(1, -2),
+            Coordinates(-1, -2),
+            Coordinates(2, 1),
+            Coordinates(-2, 1),
+            Coordinates(2, -1),
+            Coordinates(-2, -1),
+        ]
+
+        valid_moves = []
+        for offset in knight_directions:
+            new_coords = coords + offset
+            # The move is only valid there is a blank or opponent tile on the new location
+            if new_coords.is_valid() and not self[new_coords].is_on_side(player):
+                valid_moves.append(new_coords)
+        return valid_moves
+
+    def generate_king_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
+        """Generates all the valid moves for a king"""
+        assert coords.is_valid() and self[coords].is_king() and self[coords].is_on_side(player)
+        valid_moves = []
+        for offset in self.directions:
+            new_coords = coords + offset
+            if new_coords.is_valid() and not self[new_coords].is_on_side():
+                valid_moves.append(new_coords)
+        return valid_moves
+
+    def generate_queen_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
+        """Generates all the valid moves for a queen"""
+        assert coords.is_valid() and self[coords].is_queen() and self[coords].is_on_side(player)
+        valid_moves = []
+
+        for direction in self.directions:
+            for scale in range(1, 8):
+                new_coords = direction * scale + coords
+                if not new_coords.is_valid():
+                    break
+                if self[new_coords].is_on_side(player):
+                    break
+                valid_moves.append(new_coords)
+                if self[new_coords].is_opponent(player):
+                    break
+        return valid_moves
+
+    def generate_rook_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
+        """Generates all the valid moves for a rook"""
+        assert coords.is_valid() and self[coords].is_rook() and self[coords].is_on_side(player)
+        valid_moves = []
+
+        for direction in self.directions[0:4]:
+            for scale in range(1, 8):
+                new_coords = direction * scale + coords
+                if not new_coords.is_valid():
+                    break
+                if self[new_coords].is_on_side(player):
+                    break
+                valid_moves.append(new_coords)
+                if self[new_coords].is_opponent(player):
+                    break
+        return valid_moves
+
+    def generate_bishop_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
+        """Generates all the valid moves for a bishop"""
+        assert coords.is_valid() and self[coords].is_bishop() and self[coords].is_on_side(player)
+        valid_moves = []
+
+        for direction in self.directions[4:8]:
+            for scale in range(1, 8):
+                new_coords = direction * scale + coords
+                if not new_coords.is_valid():
+                    break
+                if self[new_coords].is_on_side(player):
+                    break
+                valid_moves.append(new_coords)
+                if self[new_coords].is_opponent(player):
+                    break
+        return valid_moves
+
+    def generate_pawn_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
+        """Generates all the valid moves for a pawn"""
+        assert coords.is_valid() and self[coords].is_pawn() and self[coords].is_on_side(player)
+        valid_moves = []
+        direction = 1 if player == Player.P1 else -1
+
+        # Basic advance. Can only advance if the tile is empty
+        new_coord = coords + Coordinates(0, direction)
+        if new_coord.is_valid() and self[new_coord] == Piece.NONE:
+            valid_moves.append(new_coord)
+
+            # Double advance (only available if we can single advance)
+            if player == Player.P1 and coords.rank == 1:
+                new_coord = coords + Coordinates(0, direction * 2)
+                if new_coord.is_valid() and self[new_coord] == Piece.NONE:
+                    valid_moves.append(new_coord)
+            if player == Player.P2 and coords.rank == 6:
+                new_coord = coords + Coordinates(0, direction * 2)
+                if new_coord.is_valid() and self[new_coord] == Piece.NONE:
+                    valid_moves.append(new_coord)
+
+        # Capture Diagonally
+        for capture_coords in [Coordinates(1, direction), Coordinates(-1, direction)]:
+            capture_coords = coords + capture_coords
+            if capture_coords.is_valid() and self[capture_coords].is_opponent(player):
+                valid_moves.append(capture_coords)
+
+        return valid_moves
+
+
+
+    def is_in_check(self, player: Player) -> bool:
+        """Returns true if the player is in check in the current position"""
+
+        king_pos = self.find_king(player)
+
+        # Knights
+        knight_directions = [
+            Coordinates(1, 2),
+            Coordinates(-1, 2),
+            Coordinates(1, -2),
+            Coordinates(-1, -2),
+            Coordinates(2, 1),
+            Coordinates(-2, 1),
+            Coordinates(2, -1),
+            Coordinates(-2, -1),
+        ]
+        for offset in knight_directions:
+            pos = king_pos + offset
+            if pos.is_valid and self[pos].is_opponent(player) and self[pos].is_knight():
+                return True
+
+        # Queens
+        for direction in self.directions:
+            for scale in range(8):
+                pos = direction * scale + king_pos
+                if not pos.is_valid():
+                    break
+                if self[pos] == Piece.NONE:
+                    continue
+                if self[pos].is_opponent(player) and self[pos].is_queen():
+                    return True
+                break
+
+        # Rooks
+        for direction in self.directions[0:4]:
+            for scale in range(8):
+                pos = direction * scale + king_pos
+                if not pos.is_valid():
+                    break
+                if self[pos] == Piece.NONE:
+                    continue
+                if self[pos].is_opponent(player) and self[pos].is_rook():
+                    return True
+                break
+
+        # Bishops
+        for direction in self.directions[4:8]:
+            for scale in range(8):
+                pos = direction * scale + king_pos
+                if not pos.is_valid():
+                    break
+                if self[pos] == Piece.NONE:
+                    continue
+                if self[pos].is_opponent(player) and self[pos].is_bishop():
+                    return True
+                break
+
+        # Pawns
+        if player == Player.P1:
+            pos = king_pos + Coordinates(1, -1)
+            if pos.is_valid() and self[pos] == Piece.BP:
+                return True
+            pos = king_pos + Coordinates(-1, -1)
+            if pos.is_valid() and self[pos] == Piece.BP:
+                return True
+        else:
+            pos = king_pos + Coordinates(1, 1)
+            if pos.is_valid() and self[pos] == Piece.WP:
+                return True
+            pos = king_pos + Coordinates(-1, 1)
+            if pos.is_valid() and self[pos] == Piece.WP:
+                return True
+
+        # The king lives another day
+        return False
 
 class ChessState(NamedTuple):
     """Tuple of game state"""

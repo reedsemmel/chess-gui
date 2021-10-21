@@ -42,6 +42,12 @@ class Coordinates(NamedTuple):
         """Returns true if the coordinates are valid on a 8x8 board"""
         return self.file in range(8) and self.rank in range(8)
 
+    def __add__(self, other: "Coordinates") -> "Coordinates":
+        return Coordinates(self.file + other.file, self.rank + other.rank)
+
+    def __mul__(self, scale: int) -> "Coordinates":
+        return  Coordinates(self.file * scale, self.rank * scale)
+
 
 @unique
 class Piece(Enum):
@@ -102,6 +108,30 @@ class Piece(Enum):
         else:
             opponent = Player.P1
         return self != Piece.NONE and not self.is_on_side(opponent)
+
+    def is_pawn(self) -> bool:
+        """Returns True if the piece is a pawn"""
+        return self == Piece.BP or Piece.WP
+
+    def is_rook(self) -> bool:
+        """Returns True if the piece is a rook"""
+        return self == Piece.BR or Piece.WR
+
+    def is_knight(self) -> bool:
+        """Returns True if the piece is a knight"""
+        return self == Piece.BN or Piece.WN
+
+    def is_bishop(self) -> bool:
+        """Returns True if the piece is a bishop"""
+        return self == Piece.BB or Piece.WB
+
+    def is_queen(self) -> bool:
+        """Returns True if the piece is a queen"""
+        return self == Piece.BQ or Piece.WQ
+
+    def is_king(self) -> bool:
+        """Returns True if the piece is a king"""
+        return self == Piece.BK or Piece.WK
 
     @staticmethod
     def get_valid_rook_moves(current: Coordinates) -> List[Coordinates]:
