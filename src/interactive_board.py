@@ -53,6 +53,7 @@ class InteractiveBoard(QWidget):
                 self.tile_grid[file][rank].set_image(Piece.get_piece_pixmap(Piece.NONE))
 
         self.setLayout(layout)
+        self.redraw_whole_board(self.chess.get_state().board._grid)
 
     # Called by ChessTile widgets and passes their position to this function
     def handle_click(self, file: int, rank: int) -> None:
@@ -64,17 +65,18 @@ class InteractiveBoard(QWidget):
 
         coord: Coordinates = Coordinates(file, rank)
 
+
         # If a tile isn't selected, select it
         if not self.current_selection.is_valid():
-            print("Selected", coord)
-            self.current_selection = coord
+            if self.chess.piece_at(coord).is_on_side(self.chess.state.current_turn):
+                print(coord, ":", self.chess.get_valid_moves(coord))
+                self.current_selection = coord
+            else:
+                print("that tile doesn't have one of the current turn's pieces on it")
         else:
             if self.chess.check_move(self.current_selection, coord):
-                print("Move", self.current_selection, "to", coord)
                 self.chess.make_move(self.current_selection, coord)
-                self.redraw_whole_board(self.chess.get_state().board)
-            else:
-                print("invalid move")
+                self.redraw_whole_board(self.chess.get_state().board._grid)
             self.current_selection = Coordinates(-1, -1)
 
 
@@ -117,7 +119,6 @@ class InteractiveBoard(QWidget):
             # Holds the image we display
             self.label = QLabel(self)
 
-            # TODO: pick less ugly colors
             # Chess is played on a checkered board. Adding the file and rank
             # index is an easy way to see which we are on
             if (self.file + self.rank) % 2:
@@ -150,7 +151,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     widget = InteractiveBoard(Chess(), Settings())
-    widget.draw_piece(Piece.WR, 2, 3)
     widget.setGeometry(0, 0, 800, 800)
     widget.show()
 

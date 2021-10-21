@@ -97,13 +97,13 @@ class Piece(Enum):
     def is_on_side(self, player: "Player") -> bool:
         """Returns True if the Piece is on the side of player"""
         if (
-            player == Player.P1 and self == Piece.WR or Piece.WB or Piece.WN or
-            Piece.WQ or Piece.WK or Piece.WP
+            player == Player.P1 and (self == Piece.WR or self == Piece.WB or self == Piece.WN or
+            self == Piece.WQ or self == Piece.WK or self == Piece.WP)
         ):
             return True
         if (
-            player == Player.P2 and self == Piece.BR or Piece.BB or Piece.BN or
-            Piece.BQ or Piece.BK or Piece.BP
+            player == Player.P2 and (self == Piece.BR or self == Piece.BB or self == Piece.BN or
+            self == Piece.BQ or self == Piece.BK or self == Piece.BP)
         ):
             return True
         return False
@@ -114,31 +114,31 @@ class Piece(Enum):
             opponent = Player.P2
         else:
             opponent = Player.P1
-        return self != Piece.NONE and not self.is_on_side(opponent)
+        return self != Piece.NONE and self.is_on_side(opponent)
 
     def is_pawn(self) -> bool:
         """Returns True if the piece is a pawn"""
-        return self == Piece.BP or Piece.WP
+        return self == Piece.BP or self == Piece.WP
 
     def is_rook(self) -> bool:
         """Returns True if the piece is a rook"""
-        return self == Piece.BR or Piece.WR
+        return self == Piece.BR or self == Piece.WR
 
     def is_knight(self) -> bool:
         """Returns True if the piece is a knight"""
-        return self == Piece.BN or Piece.WN
+        return self == Piece.BN or self == Piece.WN
 
     def is_bishop(self) -> bool:
         """Returns True if the piece is a bishop"""
-        return self == Piece.BB or Piece.WB
+        return self == Piece.BB or self == Piece.WB
 
     def is_queen(self) -> bool:
         """Returns True if the piece is a queen"""
-        return self == Piece.BQ or Piece.WQ
+        return self == Piece.BQ or self == Piece.WQ
 
     def is_king(self) -> bool:
         """Returns True if the piece is a king"""
-        return self == Piece.BK or Piece.WK
+        return self == Piece.BK or self == Piece.WK
 
     @staticmethod
     def get_valid_rook_moves(current: Coordinates) -> List[Coordinates]:

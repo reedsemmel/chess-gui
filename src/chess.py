@@ -11,7 +11,7 @@ Description:
 
 import copy
 
-from typing import List, NamedTuple, Tuple
+from typing import List
 from fen import FEN
 from utils import Coordinates, Piece, Player
 
@@ -102,7 +102,7 @@ class Board:
             new_coords = coords + offset
             # The move is only valid there is a blank or opponent tile on the new location
             if new_coords.is_valid() and not self[new_coords].is_on_side(player):
-                valid_moves.append(new_coords)
+                valid_moves.append(copy.deepcopy(new_coords))
         return valid_moves
 
     def generate_king_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
@@ -111,7 +111,7 @@ class Board:
         valid_moves = []
         for offset in self.directions:
             new_coords = coords + offset
-            if new_coords.is_valid() and not self[new_coords].is_on_side():
+            if new_coords.is_valid() and not self[new_coords].is_on_side(player):
                 valid_moves.append(new_coords)
         return valid_moves
 
@@ -231,13 +231,13 @@ class Board:
         ]
         for offset in knight_directions:
             pos = king_pos + offset
-            if pos.is_valid and self[pos].is_opponent(player) and self[pos].is_knight():
+            if pos.is_valid() and self[pos].is_opponent(player) and self[pos].is_knight():
                 return True
 
         # Queens
         for direction in self.directions:
-            for scale in range(8):
-                pos = direction * scale + king_pos
+            for scale in range(1, 8):
+                pos = king_pos + direction * scale
                 if not pos.is_valid():
                     break
                 if self[pos] == Piece.NONE:
@@ -248,7 +248,7 @@ class Board:
 
         # Rooks
         for direction in self.directions[0:4]:
-            for scale in range(8):
+            for scale in range(1, 8):
                 pos = direction * scale + king_pos
                 if not pos.is_valid():
                     break
@@ -260,7 +260,7 @@ class Board:
 
         # Bishops
         for direction in self.directions[4:8]:
-            for scale in range(8):
+            for scale in range(1, 8):
                 pos = direction * scale + king_pos
                 if not pos.is_valid():
                     break
@@ -272,41 +272,49 @@ class Board:
 
         # Pawns
         if player == Player.P1:
-            pos = king_pos + Coordinates(1, -1)
+            pos = king_pos + Coordinates(1, 1)
             if pos.is_valid() and self[pos] == Piece.BP:
                 return True
-            pos = king_pos + Coordinates(-1, -1)
+            pos = king_pos + Coordinates(-1, 1)
             if pos.is_valid() and self[pos] == Piece.BP:
                 return True
         else:
-            pos = king_pos + Coordinates(1, 1)
+            pos = king_pos + Coordinates(1, -1)
             if pos.is_valid() and self[pos] == Piece.WP:
                 return True
-            pos = king_pos + Coordinates(-1, 1)
+            pos = king_pos + Coordinates(-1, -1)
             if pos.is_valid() and self[pos] == Piece.WP:
                 return True
 
         # The king lives another day
         return False
 
-    def prune_illegal_moves(self, moves: List[Tuple(Coordinates, Coordinates)], player: Player):
+    def prune_illegal_moves(self, moves: List[tuple[Coordinates, Coordinates]], player: Player):
         """Removes illegal moves from the list, which are moves that put yourself in check"""
+        moves_copy = copy.deepcopy(moves)
         for move in moves:
             board_copy = copy.deepcopy(self)
-            board_copy[move[0]] = board_copy[move[1]]
-            board_copy[move[1]] = Piece.NONE
+            board_copy[move[1]] = board_copy[move[0]]
+            board_copy[move[0]] = Piece.NONE
             if board_copy.is_in_check(player):
-                moves.remove(move)
+                moves_copy.remove(move)
+        return moves_copy
 
-class ChessState(NamedTuple):
+class ChessState:
     """Tuple of game state"""
 
-    available_moves: List[Tuple(Coordinates, Coordinates)] = []
-    current_turn: Player = Player.P1
-    board: Board = Board.new_default_board()
+
+    def __init__(self):
+        self.available_moves: List[tuple[Coordinates, Coordinates]] = []
+        self.current_turn: Player = Player.P1
+        self.board: Board = Board.new_default_board()
+        self.generate_all_legal_moves()
+
 
     def generate_all_legal_moves(self):
         """Populates self.available_moves with all the legal moves for current turn"""
+
+        self.available_moves = []
 
         for file in range(8):
             for rank in range(8):
@@ -316,7 +324,7 @@ class ChessState(NamedTuple):
                     continue
                 for move in self.board.generate_moves(coord, self.current_turn):
                     self.available_moves.append((coord, move))
-
+        self.available_moves = self.board.prune_illegal_moves(self.available_moves, self.current_turn)
 
 class Chess:
     """Chess class to hold the internal state of the chess board"""
@@ -374,7 +382,8 @@ class Chess:
         self.state.board[new] = self.state.board[old]
         self.state.board[old] = Piece.NONE
 
-        self.state.current_turn = Player.P1 if self.state.current_turn == Player.P2 else Player.P1
+        self.state.current_turn = Player.P1 if self.state.current_turn == Player.P2 else Player.P2
+        self.state.generate_all_legal_moves()
         return True
 
     def check_move(self, old: Coordinates, new: Coordinates) -> bool:
