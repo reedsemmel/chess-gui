@@ -404,7 +404,7 @@ class Chess:
 
     def is_in_checkmate(self) -> bool:
         """check if the king is in checkmate"""
-        return self.is_in_check() and len(self.state.available_moves) == 0
+        return self.is_in_check(self.state.current_turn) and len(self.state.available_moves) == 0
 
     def get_state(self) -> ChessState:
         """Return the current game state"""
