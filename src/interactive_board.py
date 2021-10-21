@@ -84,6 +84,9 @@ class InteractiveBoard(QWidget):
                 for tile in file:
                     tile.remove_highlight()
 
+            if self.chess.is_in_check():
+                king_pos = self.chess.state.board.find_king(self.chess.state.current_turn)
+                self.tile_grid[king_pos.file][king_pos.rank].highlight_red()
 
     # Replaces the piece on (file, rank) with the piece provided
     def draw_piece(self, piece: Piece, file: int, rank: int) -> None:
