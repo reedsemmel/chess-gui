@@ -454,12 +454,12 @@ if __name__ == "__main__":
     class PlayerIntBidirectionalConversionTestCase(unittest.TestCase):
         """Unit test for the Player class to ensure correct int conversion in both directions."""
 
-        def test_player_1(self) -> None: # pylint: disable=no-self-use
+        def test_player_1(self) -> None:
             """Tests that Player 1 is converted to the correct int and vice versa."""
             self.assertEqual(int(Player.P1), 0, "Player 1 is not 0")
             self.assertEqual(Player(0), Player.P1, "0 is not Player 1")
 
-        def test_player_2(self) -> None: # pylint: disable=no-self-use
+        def test_player_2(self) -> None:
             """Tests that Player 2 is converted to the correct int and vice versa."""
             self.assertEqual(int(Player.P2), 1, "Player 2 is not 1")
             self.assertEqual(Player(1), Player.P2, "1 is not Player 2")
