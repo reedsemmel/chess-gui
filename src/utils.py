@@ -24,7 +24,6 @@ File a b c d e f g h  Rank
 """
 
 from enum import Enum, unique
-from itertools import chain
 from re import fullmatch
 from pathlib import Path
 from operator import attrgetter
@@ -72,7 +71,7 @@ class Coordinates:
 
     def __str__(self) -> str:
         """Returns the coordinates as a string"""
-        return f"{chr(ord('a') + self._file)}{self._rank}" if self.is_valid() else "--"
+        return f"{chr(ord('a') + self._file)}{self._rank + 1}" if self.is_valid() else "--"
 
     def __eq__(self, other) -> bool:
         """Comparison function"""
@@ -451,6 +450,109 @@ if __name__ == "__main__":
                                      f'  Expected -> {expected}\n'
                                      f'  Actual   -> {actual}')
 
+
+    class PlayerIntBidirectionalConversionTestCase(unittest.TestCase):
+        """Unit test for the Player class to ensure correct int conversion in both directions."""
+
+        def test_player_1(self) -> None:
+            """Tests that Player 1 is converted to the correct int and vice versa."""
+            self.assertEqual(int(Player.P1), 0, "Player 1 is not 0")
+            self.assertEqual(Player(0), Player.P1, "0 is not Player 1")
+
+        def test_player_2(self) -> None:
+            """Tests that Player 2 is converted to the correct int and vice versa."""
+            self.assertEqual(int(Player.P2), 1, "Player 2 is not 1")
+            self.assertEqual(Player(1), Player.P2, "1 is not Player 2")
+
+
+    class SettingsInvalidInputsTestCase(unittest.TestCase):
+        """Unit test for the Settings class to ensure invalid inputs are processed correctly."""
+
+        def setUp(self) -> None:
+            """Setup class instance for testing."""
+            self.settings: Settings = Settings()
+
+        def test_initial_values(self) -> None:
+            """Tests if initial values are configured correctly."""
+            self.assertEqual(self.settings.player_name, "Player 1",
+                "Player name is not \"Player 1\"")
+            self.assertEqual(self.settings.opponent_name, "Player 2",
+                "Opponent name is not \"Player 2\"")
+            self.assertEqual(self.settings.primary_color, "#573D11",
+                "Primary color is not #573D11")
+            self.assertEqual(self.settings.secondary_color, "#DCB167",
+                "Secondary color is not #DCB167")
+
+        def test_invalid_name_change(self) -> None:
+            """Tests that invalid names are rejected."""
+            self.settings.change_name("This! is! invalid!")
+            self.assertEqual(self.settings.player_name, "Player 1",
+                f"Player name was changed from \"Player 1\" to \"{self.settings.player_name}\"")
+
+        def test_invalid_hexes(self) -> None:
+            """Tests that invalid hexes are detected as such."""
+            self.assertFalse(self.settings._is_valid_hex("#invali"), # pylint: disable=protected-access
+                "Invalid hex #invali accepted")
+            self.assertFalse(self.settings._is_valid_hex("#dhexes"), # pylint: disable=protected-access
+                "Invalid hex #dhexes accepted")
+            self.assertFalse(self.settings._is_valid_hex("#12345!"), # pylint: disable=protected-access
+                "Invalid hex #12345! accepted")
+
+        def test_invalid_color_changes(self) -> None:
+            """Tests that invalid colors are rejected."""
+            self.settings.change_primary_color("#invali")
+            self.assertEqual(self.settings.primary_color, "#573D11",
+                f"Primary color was changed from #573D11 to {self.settings.primary_color}")
+
+            self.settings.change_secondary_color("#dhexes")
+            self.assertEqual(self.settings.secondary_color, "#DCB167",
+                f"Secondary color was changed from #DCB167 to {self.settings.secondary_color}")
+
+
+    class SettingsValidInputsTestCase(unittest.TestCase):
+        """Unit test for the Settings class to ensure valid inputs are processed correctly."""
+
+        def setUp(self) -> None:
+            """Setup class instance for testing."""
+            self.settings: Settings = Settings()
+
+        def test_initial_values(self) -> None:
+            """Tests if initial values are configured correctly."""
+            self.assertEqual(self.settings.player_name, "Player 1",
+                "Player name is not \"Player 1\"")
+            self.assertEqual(self.settings.opponent_name, "Player 2",
+                "Opponent name is not \"Player 2\"")
+            self.assertEqual(self.settings.primary_color, "#573D11",
+                "Primary color is not #573D11")
+            self.assertEqual(self.settings.secondary_color, "#DCB167",
+                "Secondary color is not #DCB167")
+
+        def test_valid_name_change(self) -> None:
+            """Tests that valid names are accepted."""
+            self.settings.change_name("This is valid 123")
+            self.assertEqual(self.settings.player_name, "This is valid 123",
+                "Failed to change player name from \"Player 1\" to \"This is valid 123\"")
+
+        def test_valid_hexes(self):
+            """Tests that valid hexes are detected as such."""
+            self.assertTrue(self.settings._is_valid_hex("#123456"), # pylint: disable=protected-access
+                "Valid hex #123456 not accepted")
+            self.assertTrue(self.settings._is_valid_hex("#cf3445"), # pylint: disable=protected-access
+                "Valid hex #cf3445 not accepted")
+            self.assertTrue(self.settings._is_valid_hex("#FFF"), # pylint: disable=protected-access
+                "Valid hex #FFF not accepted")
+
+        def test_valid_color_changes(self):
+            """Tests that valid colors are accepted."""
+            self.settings.change_primary_color("#FFF")
+            self.assertEqual(self.settings.primary_color, "#FFF",
+                "Failed to change primary color from #573D11 to #FFF")
+
+            self.settings.change_secondary_color("#cf3445")
+            self.assertEqual(self.settings.secondary_color, "#cf3445",
+                "Failed to change secondary color from #DCB167 to #cf3445")
+
+
     class CoordinatesUnitTest(unittest.TestCase):
         """Unit tests for the Coordinates class."""
 
@@ -479,5 +581,6 @@ if __name__ == "__main__":
                 coord = Coordinates(file_rank)
                 self.assertFalse(coord.is_valid(),
                                  f'{file_rank} should be invalid.')
+
 
     unittest.main()
