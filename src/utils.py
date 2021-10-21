@@ -48,6 +48,13 @@ class Coordinates(NamedTuple):
     def __mul__(self, scale: int) -> "Coordinates":
         return  Coordinates(self.file * scale, self.rank * scale)
 
+    def __str__(self) -> str:
+        """Converts the Coordinate into the traditional chess notation"""
+        if self.is_valid():
+            # The file is a letter a-h and the rank is a number 1-8
+            return f"{chr(ord('a') + self.file)}{self.rank + 1}"
+        else:
+            return "00"
 
 @unique
 class Piece(Enum):
