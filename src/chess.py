@@ -6,7 +6,7 @@ File: chess.py
 Author: Chris Degawa
 Date: 10/7/2021
 Description:
-    Houses information and utilites for the basic chess game.
+    Houses information and utilities for the basic chess game.
 """
 
 from typing import List, NamedTuple, Optional, Tuple
@@ -39,10 +39,10 @@ class Chess:
         self.board = [[None for _ in range(8)] for _ in range(8)]
         # Stores all of the moves in a game
         self.__last_moves: List[FEN] = []
-        self.curent_fen: FEN = FEN()
+        self.current_fen: FEN = FEN()
 
     def __set_board(self, fen: FEN) -> bool:
-        """Set the board to an inital state"""
+        """Set the board to an initial state"""
         if False in fen.valid:
             return False
         self.__last_moves.clear()
@@ -54,11 +54,11 @@ class Chess:
         if False in fen.valid:
             return False
         self.__last_moves.append(fen)
-        self.curent_fen = self.__last_moves[-1]
+        self.current_fen = self.__last_moves[-1]
         return True
 
     def default_board(self) -> bool:
-        """Initalize a default board"""
+        """Initialize a default board"""
         return self.__set_board(FEN())
 
     def import_board(self, fen: str) -> bool:
@@ -71,7 +71,7 @@ class Chess:
 
     def export_board(self) -> FEN:
         """Export the board to a fen code"""
-        return self.curent_fen
+        return self.current_fen
 
     def export_boards(self) -> List[FEN]:
         """Export all of the boards to a list of fen codes"""
@@ -106,7 +106,7 @@ class Chess:
     #         True if white is in check else False
     def is_in_check(self) -> Tuple[bool, bool]:
         """check if the king is in check"""
-        return FEN.is_in_check(self.curent_fen)
+        return FEN.is_in_check(self.current_fen)
 
     # TODO: this function
     # Design: check if we have a king in checkmate
@@ -114,7 +114,7 @@ class Chess:
     #         and True if white is in check else False
     def is_in_checkmate(self) -> Tuple[bool, bool]:
         """check if the king is in checkmate"""
-        return FEN.is_in_checkmate(self.curent_fen)
+        return FEN.is_in_checkmate(self.current_fen)
 
     def get_state(self) -> ChessState:
         """Return the current game state"""
