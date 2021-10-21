@@ -138,13 +138,11 @@ class Piece(Enum):
     def is_on_side(self, player: "Player") -> bool:
         """Returns True if the Piece is on the side of player"""
         if (
-            player == Player.P1 and (self == Piece.WR or self == Piece.WB or self == Piece.WN or
-            self == Piece.WQ or self == Piece.WK or self == Piece.WP)
+            player == Player.P1 and self in (Piece.WR, Piece.WB, Piece.WN, Piece.WQ, Piece.WK, Piece.WP)
         ):
             return True
         if (
-            player == Player.P2 and (self == Piece.BR or self == Piece.BB or self == Piece.BN or
-            self == Piece.BQ or self == Piece.BK or self == Piece.BP)
+            player == Player.P2 and self in (Piece.BR, Piece.BB, Piece.BN, Piece.BQ, Piece.BK, Piece.BP)
         ):
             return True
         return False
