@@ -9,7 +9,9 @@ Description:
     Houses information and utilities for the basic chess game.
 """
 
-from typing import List, NamedTuple, Optional, Tuple
+import copy
+
+from typing import List, NamedTuple, Tuple
 from fen import FEN
 from utils import Coordinates, Piece, Player
 
@@ -193,6 +195,22 @@ class Board:
 
         return valid_moves
 
+    def generate_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
+        """Wrapper to tie each piece function together"""
+        assert coords.is_valid()
+        if self[coords].is_pawn():
+            return self.generate_pawn_moves(coords, player)
+        if self[coords].is_rook():
+            return self.generate_rook_moves(coords, player)
+        if self[coords].is_knight():
+            return self.generate_knight_moves(coords, player)
+        if self[coords].is_bishop():
+            return self.generate_bishop_moves(coords, player)
+        if self[coords].is_queen():
+            return self.generate_queen_moves(coords, player)
+        if self[coords].is_king():
+            return self.generate_king_moves(coords, player)
+        return []
 
 
     def is_in_check(self, player: Player) -> bool:
@@ -271,14 +289,33 @@ class Board:
         # The king lives another day
         return False
 
+    def prune_illegal_moves(self, moves: List[Tuple(Coordinates, Coordinates)], player: Player):
+        """Removes illegal moves from the list, which are moves that put yourself in check"""
+        for move in moves:
+            board_copy = copy.deepcopy(self)
+            board_copy[move[0]] = board_copy[move[1]]
+            board_copy[move[1]] = Piece.NONE
+            if board_copy.is_in_check(player):
+                moves.remove(move)
+
 class ChessState(NamedTuple):
     """Tuple of game state"""
 
-    in_check: bool = False
-    who_is_in_check: Optional[Player] = None
-    is_stalemate: bool = False
+    available_moves: List[Tuple(Coordinates, Coordinates)] = []
     current_turn: Player = Player.P1
     board: Board = Board.new_default_board()
+
+    def generate_all_legal_moves(self):
+        """Populates self.available_moves with all the legal moves for current turn"""
+
+        for file in range(8):
+            for rank in range(8):
+                coord = Coordinates(file, rank)
+                # Don't care about squares that aren't our pieces
+                if not self.board[coord].is_on_side(self.current_turn):
+                    continue
+                for move in self.board.generate_moves(coord, self.current_turn):
+                    self.available_moves.append((coord, move))
 
 
 class Chess:
@@ -327,44 +364,38 @@ class Chess:
         """Export all of the boards to a list of fen codes"""
         return self.__last_moves
 
-    # TODO: this function
-    # Design: take a piece and a coordinate, and check if the piece can move to that coordinate
-    #         using the make_move function in the FEN class
-    # Return: True if the move is valid, False otherwise
     def make_move(self, old: Coordinates, new: Coordinates) -> bool:
         """add a move to the list of moves"""
+        move = (old, new)
+        if not move in self.state.available_moves:
+            return False
+
+        # Apply actual move to the state.
+        self.state.board[new] = self.state.board[old]
+        self.state.board[old] = Piece.NONE
+
+        self.state.current_turn = Player.P1 if self.state.current_turn == Player.P2 else Player.P1
         return True
 
-    # TODO: this function
-    # Design: take a piece and a coordinate, and check if the piece can move to that coordinate
-    #         using the make_move function in the FEN class, but doesn't actually make the move
-    # Return: True if the move is valid, False otherwise
     def check_move(self, old: Coordinates, new: Coordinates) -> bool:
         """check valid moves for a piece"""
-        return True
+        return (old, new) in self.state.available_moves
 
-    # TODO: this function
-    # Design: take a piece and a coordinate and return a list of valid moves it can make, can
-    #         get nullified by the king being in check
     def get_valid_moves(self, current: Coordinates) -> List[Coordinates]:
         """get a list of valid moves for a piece"""
-        return []
+        ret: List[Coordinates] = []
+        for move in self.state.available_moves:
+            if move[0] == current:
+                ret.append(move[1])
+        return ret
 
-    # TODO: this function
-    # Design: check if we have a king in check
-    # Return: Tuple consisting of True if any king is in check and
-    #         True if white is in check else False
-    def is_in_check(self) -> Tuple[bool, bool]:
+    def is_in_check(self) -> bool:
         """check if the king is in check"""
-        return FEN.is_in_check(self.current_fen)
+        return self.state.board.is_in_check(self.state.current_turn)
 
-    # TODO: this function
-    # Design: check if we have a king in checkmate
-    # Return: Tuple consisting of True if any king is in checkmate with no valid moves
-    #         and True if white is in check else False
-    def is_in_checkmate(self) -> Tuple[bool, bool]:
+    def is_in_checkmate(self) -> bool:
         """check if the king is in checkmate"""
-        return FEN.is_in_checkmate(self.current_fen)
+        return self.is_in_check() and len(self.state.available_moves) == 0
 
     def get_state(self) -> ChessState:
         """Return the current game state"""
