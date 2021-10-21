@@ -11,10 +11,12 @@ Description:
     Classes and widgets for the interactive game board.
 """
 
+from typing import List
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QGridLayout, QLabel, QWidget
 
-from utils import Piece, Settings
+from utils import Piece, Settings, Coordinates
+from chess import Chess
 
 class InteractiveBoard(QWidget):
     """An interactive chess board widget.
@@ -28,8 +30,11 @@ class InteractiveBoard(QWidget):
     will be off.
     """
 
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, chess: Chess, settings: Settings) -> None:
         super().__init__()
+        self.chess = chess
+        self.current_selection: Coordinates = Coordinates(-1, -1)
+
 
         # Set up an 8 by 8 grid
         layout = QGridLayout(self)
@@ -48,6 +53,7 @@ class InteractiveBoard(QWidget):
                 self.tile_grid[file][rank].set_image(Piece.get_piece_pixmap(Piece.NONE))
 
         self.setLayout(layout)
+        self.redraw_whole_board(self.chess.get_state().board._grid)
 
     # Called by ChessTile widgets and passes their position to this function
     def handle_click(self, file: int, rank: int) -> None:
@@ -56,8 +62,23 @@ class InteractiveBoard(QWidget):
         Called by a tile once it is clicked. The tile provides the arguments
         x and y from its position on the grid
         """
-        # Dummy implementation for now. Just for testing
-        print(f"{chr(ord('a') + file)}{rank + 1} clicked")
+
+        coord: Coordinates = Coordinates(file, rank)
+
+
+        # If a tile isn't selected, select it
+        if not self.current_selection.is_valid():
+            if self.chess.piece_at(coord).is_on_side(self.chess.state.current_turn):
+                print(coord, ":", self.chess.get_valid_moves(coord))
+                self.current_selection = coord
+            else:
+                print("that tile doesn't have one of the current turn's pieces on it")
+        else:
+            if self.chess.check_move(self.current_selection, coord):
+                self.chess.make_move(self.current_selection, coord)
+                self.redraw_whole_board(self.chess.get_state().board._grid)
+            self.current_selection = Coordinates(-1, -1)
+
 
     # Replaces the piece on (file, rank) with the piece provided
     def draw_piece(self, piece: Piece, file: int, rank: int) -> None:
@@ -66,6 +87,24 @@ class InteractiveBoard(QWidget):
             self.tile_grid[file][rank].set_image(Piece.get_piece_pixmap(piece))
         else:
             print(f"Invalid index {file} {rank}")
+
+    def redraw_whole_board(self, board: List[List[Piece]]) -> bool:
+        """Redraws the whole board from an 8x8 grid of pieces"""
+
+        # Ensure it is 8x8
+        if len(board) != 8:
+            return False
+        for file in board:
+            if len(file) != 8:
+                return False
+
+        for file_index, file in enumerate(board):
+            for rank_index, cell in enumerate(file):
+                self.draw_piece(cell, file_index, rank_index)
+
+        return True
+
+
 
     class ChessTile(QWidget):
         """A basic chess tile widget
@@ -80,7 +119,6 @@ class InteractiveBoard(QWidget):
             # Holds the image we display
             self.label = QLabel(self)
 
-            # TODO: pick less ugly colors
             # Chess is played on a checkered board. Adding the file and rank
             # index is an easy way to see which we are on
             if (self.file + self.rank) % 2:
@@ -91,6 +129,7 @@ class InteractiveBoard(QWidget):
         def set_image(self, piece: QtGui.QPixmap):
             """Sets the image in the tile to the one provided."""
             self.label.setPixmap(piece)
+            self.label.adjustSize()
 
         def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None: # pylint: disable=invalid-name
             """Passes the click information to the parent widget along with the rank and file."""
@@ -111,8 +150,7 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
 
-    widget = InteractiveBoard(Settings())
-    widget.draw_piece(Piece.WR, 2, 3)
+    widget = InteractiveBoard(Chess(), Settings())
     widget.setGeometry(0, 0, 800, 800)
     widget.show()
 

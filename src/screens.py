@@ -14,6 +14,7 @@ from PyQt5.QtCore import QRegExp, Qt
 from PyQt5.QtGui import QRegExpValidator, QResizeEvent
 from PyQt5.QtWidgets import QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel
 from PyQt5.QtWidgets import QLineEdit, QPushButton, QSizePolicy, QVBoxLayout, QWidget
+from chess import Chess
 
 from interactive_board import InteractiveBoard
 from utils import Piece, Player, Settings
@@ -193,7 +194,8 @@ class GameScreen(QWidget):
 
     def _set_custom_properties(self, settings: Settings) -> None:
         """Sets properties unique to this widget."""
-        self.board: InteractiveBoard = InteractiveBoard(settings)
+        self.chess: Chess = Chess()
+        self.board: InteractiveBoard = InteractiveBoard(self.chess, settings)
         self.players: "dict[Player, self.CapturedPiecesBar]" = {
             Player.P1: self.CapturedPiecesBar(self),
             Player.P2: self.CapturedPiecesBar(self)

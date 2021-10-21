@@ -51,23 +51,21 @@ class Coordinates:
 
     @file.setter
     def file(self, value: int):
-        self._file = -1
-        if value in range(8):
-            self._file = value
-        else:
-            self._rank = -1
+        self._file = value
 
     @rank.setter
     def rank(self, value: int):
-        self._rank = -1
-        if value in range(8):
-            self._rank = value
-        else:
-            self._file = -1
+        self._rank = value
 
     def is_valid(self) -> bool:
         """Returns true if the coordinates are valid on a 8x8 board"""
         return self.file in range(8) and self.rank in range(8)
+
+    def __add__(self, other: "Coordinates") -> "Coordinates":
+        return Coordinates(self.file + other.file, self.rank + other.rank)
+
+    def __mul__(self, scale: int) -> "Coordinates":
+        return Coordinates(self.file * scale, self.rank * scale)
 
     def __str__(self) -> str:
         """Returns the coordinates as a string"""
@@ -98,7 +96,6 @@ class Coordinates:
     def __repr__(self) -> str:
         """Returns the coordinates as a string"""
         return self.__str__()
-
 
 @unique
 class Piece(Enum):
@@ -137,6 +134,50 @@ class Piece(Enum):
             Piece.BP: QPixmap(str(base_path / 'bp.png')),
         }
         return piece_img[piece]
+
+    def is_on_side(self, player: "Player") -> bool:
+        """Returns True if the Piece is on the side of player"""
+        if (
+            player == Player.P1 and self in (Piece.WR, Piece.WB, Piece.WN, Piece.WQ, Piece.WK, Piece.WP)
+        ):
+            return True
+        if (
+            player == Player.P2 and self in (Piece.BR, Piece.BB, Piece.BN, Piece.BQ, Piece.BK, Piece.BP)
+        ):
+            return True
+        return False
+
+    def is_opponent(self, player: "Player") -> bool:
+        """Returns True if the Piece is an opponent's piece"""
+        if player == Player.P1:
+            opponent = Player.P2
+        else:
+            opponent = Player.P1
+        return self != Piece.NONE and self.is_on_side(opponent)
+
+    def is_pawn(self) -> bool:
+        """Returns True if the piece is a pawn"""
+        return self == Piece.BP or self == Piece.WP
+
+    def is_rook(self) -> bool:
+        """Returns True if the piece is a rook"""
+        return self == Piece.BR or self == Piece.WR
+
+    def is_knight(self) -> bool:
+        """Returns True if the piece is a knight"""
+        return self == Piece.BN or self == Piece.WN
+
+    def is_bishop(self) -> bool:
+        """Returns True if the piece is a bishop"""
+        return self == Piece.BB or self == Piece.WB
+
+    def is_queen(self) -> bool:
+        """Returns True if the piece is a queen"""
+        return self == Piece.BQ or self == Piece.WQ
+
+    def is_king(self) -> bool:
+        """Returns True if the piece is a king"""
+        return self == Piece.BK or self == Piece.WK
 
     @staticmethod
     def get_valid_rook_moves(current: Coordinates) -> List[Coordinates]:
