@@ -35,7 +35,7 @@ from PyQt5.QtGui import QPixmap
 class Coordinates:
     """file and rank coordinate tuple"""
 
-    def __init__(self, alg_or_file: Union[str, int], rank: int = -1):
+    def __init__(self, alg_or_file: "Union[str, int]", rank: int = -1):
         if isinstance(alg_or_file, str) and len(alg_or_file) == 2:
             self.file = ord(alg_or_file[0]) - ord('a')
             self.rank = int(alg_or_file[1]) - 1
@@ -180,11 +180,11 @@ class Piece(Enum):
         return self == Piece.BK or self == Piece.WK
 
     @staticmethod
-    def get_valid_rook_moves(current: Coordinates) -> List[Coordinates]:
+    def get_valid_rook_moves(current: Coordinates) -> "List[Coordinates]":
         """Returns a list of valid rook moves."""
         if not current.is_valid():
             return []
-        moves: List[Coordinates] = [Coordinates(file, current.rank)
+        moves: "List[Coordinates]" = [Coordinates(file, current.rank)
                                     for file in range(8)]
         moves += [Coordinates(current.file, rank)
                   for rank in range(8)]
@@ -192,11 +192,11 @@ class Piece(Enum):
         return [move for move in moves if move.is_valid() and move != current]
 
     @staticmethod
-    def get_valid_bishop_moves(current: Coordinates) -> List[Coordinates]:
+    def get_valid_bishop_moves(current: Coordinates) -> "List[Coordinates]":
         """Returns a list of valid bishop moves."""
         if not current.is_valid():
             return []
-        moves: List[Coordinates] = [Coordinates(file, rank)
+        moves: "List[Coordinates]" = [Coordinates(file, rank)
                                     for file in range(8)
                                     for rank in range(8)
                                     if abs(file - current.file) == abs(rank - current.rank)]
@@ -204,11 +204,11 @@ class Piece(Enum):
         return [move for move in moves if move.is_valid() and move != current]
 
     @staticmethod
-    def get_valid_knight_moves(current: Coordinates) -> List[Coordinates]:
+    def get_valid_knight_moves(current: Coordinates) -> "List[Coordinates]":
         """Returns a list of valid knight moves."""
         if not current.is_valid():
             return []
-        moves: List[Coordinates] = [Coordinates(current.file + 2, current.rank + 1),
+        moves: "List[Coordinates]" = [Coordinates(current.file + 2, current.rank + 1),
                                     Coordinates(current.file + 2,
                                                 current.rank - 1),
                                     Coordinates(current.file - 2,
@@ -235,7 +235,7 @@ class Piece(Enum):
         """Returns a list of valid king moves."""
         if not current.is_valid():
             return []
-        moves: List[Coordinates] = [Coordinates(current.file + 1, current.rank + 1),
+        moves: "List[Coordinates]" = [Coordinates(current.file + 1, current.rank + 1),
                                     Coordinates(current.file + 1,
                                                 current.rank - 1),
                                     Coordinates(current.file - 1,
@@ -253,7 +253,7 @@ class Piece(Enum):
         return [move for move in moves if move.is_valid()]
 
     @staticmethod
-    def get_valid_white_pawn_moves(current: Coordinates) -> List[Coordinates]:
+    def get_valid_white_pawn_moves(current: Coordinates) -> "List[Coordinates]":
         """Returns a list of valid white pawn moves."""
         if not current.is_valid() or current.rank == 0:
             return []
@@ -263,7 +263,7 @@ class Piece(Enum):
         return sorted([Coordinates(current.file, current.rank + 1)])
 
     @staticmethod
-    def get_valid_black_pawn_moves(current: Coordinates) -> List[Coordinates]:
+    def get_valid_black_pawn_moves(current: Coordinates) -> "List[Coordinates]":
         """Returns a list of valid black pawn moves."""
         if not current.is_valid() or current.rank == 7:
             return []
@@ -273,9 +273,9 @@ class Piece(Enum):
         return sorted([Coordinates(current.file, current.rank - 1)])
 
     @staticmethod
-    def return_valid_moves(piece, current: Coordinates) -> List[Coordinates]:
+    def return_valid_moves(piece, current: Coordinates) -> "List[Coordinates]":
         """Returns valid moves for a certain piece at a certain location"""
-        valid_moves: Dict[Piece, Any] = {
+        valid_moves: "Dict[Piece, Any]" = {
             Piece.WR: Piece.get_valid_rook_moves,
             Piece.WB: Piece.get_valid_bishop_moves,
             Piece.WN: Piece.get_valid_knight_moves,
