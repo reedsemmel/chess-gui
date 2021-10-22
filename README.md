@@ -19,8 +19,7 @@ pip install --user numpy
 ```
 
 Note that depending on your system, the command may be `pip` or `pip3` for
-Python 3. Refer to your system's manual. **NOTE: This project currently runs on
-Python 3.9, though we will probably tweak it to work with older versions later**
+Python 3. Refer to your system's manual. Tested to run with Python 3.8
 
 To run the program:
 
