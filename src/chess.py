@@ -45,7 +45,7 @@ class Board:
         self._grid[coord.file][coord.rank] = piece
 
     @classmethod
-    def new_empty_board():
+    def new_empty_board(cls):
         """Creates a new empty board"""
         return cls()
 
@@ -405,6 +405,10 @@ class Chess:
     def is_in_checkmate(self) -> bool:
         """check if the king is in checkmate"""
         return self.is_in_check(self.state.current_turn) and len(self.state.available_moves) == 0
+
+    def is_in_stalemate(self) -> bool:
+        """Check if there is stalemate (king is not in check but there are no available moves)"""
+        return (not self.is_in_check(self.state.available_moves)) and len(self.state.available_moves) == 0
 
     def get_state(self) -> ChessState:
         """Return the current game state"""
