@@ -96,7 +96,7 @@ class InteractiveBoard(QWidget):
         else:
             print(f"Invalid index {file} {rank}")
 
-    def redraw_whole_board(self, board: List[List[Piece]]) -> bool:
+    def redraw_whole_board(self, board: "List[List[Piece]]") -> bool:
         """Redraws the whole board from an 8x8 grid of pieces"""
 
         # Ensure it is 8x8

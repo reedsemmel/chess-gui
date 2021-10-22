@@ -10,8 +10,8 @@ Description:
 """
 
 from copy import deepcopy
-
 from typing import List
+
 from fen import FEN
 from utils import Coordinates, Piece, Player
 
@@ -32,7 +32,7 @@ class Board:
 
 
     def __init__(self):
-        self._grid: List[List[Piece]] = [[Piece.NONE for _ in range(8)] for _ in range(8)]
+        self._grid: "List[List[Piece]]" = [[Piece.NONE for _ in range(8)] for _ in range(8)]
 
     def __getitem__(self, coord: Coordinates):
         # This is a low level primitive, caller should verify that the coords
@@ -82,7 +82,7 @@ class Board:
         # shouldn't be possible.
         assert False
 
-    def generate_knight_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
+    def generate_knight_moves(self, coords: Coordinates, player: Player) -> "List[Coordinates]":
         """Generates all the moves a knight can perform"""
         assert coords.is_valid and self[coords].is_knight() and self[coords].is_on_side(player)
         # Knights move in an L and can jump over pieces
@@ -105,7 +105,7 @@ class Board:
                 valid_moves.append(new_coords)
         return valid_moves
 
-    def generate_king_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
+    def generate_king_moves(self, coords: Coordinates, player: Player) -> "List[Coordinates]":
         """Generates all the valid moves for a king"""
         assert coords.is_valid() and self[coords].is_king() and self[coords].is_on_side(player)
         valid_moves = []
@@ -115,7 +115,7 @@ class Board:
                 valid_moves.append(new_coords)
         return valid_moves
 
-    def generate_queen_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
+    def generate_queen_moves(self, coords: Coordinates, player: Player) -> "List[Coordinates]":
         """Generates all the valid moves for a queen"""
         assert coords.is_valid() and self[coords].is_queen() and self[coords].is_on_side(player)
         valid_moves = []
@@ -132,7 +132,7 @@ class Board:
                     break
         return valid_moves
 
-    def generate_rook_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
+    def generate_rook_moves(self, coords: Coordinates, player: Player) -> "List[Coordinates]":
         """Generates all the valid moves for a rook"""
         assert coords.is_valid() and self[coords].is_rook() and self[coords].is_on_side(player)
         valid_moves = []
@@ -149,7 +149,7 @@ class Board:
                     break
         return valid_moves
 
-    def generate_bishop_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
+    def generate_bishop_moves(self, coords: Coordinates, player: Player) -> "List[Coordinates]":
         """Generates all the valid moves for a bishop"""
         assert coords.is_valid() and self[coords].is_bishop() and self[coords].is_on_side(player)
         valid_moves = []
@@ -166,7 +166,7 @@ class Board:
                     break
         return valid_moves
 
-    def generate_pawn_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
+    def generate_pawn_moves(self, coords: Coordinates, player: Player) -> "List[Coordinates]":
         """Generates all the valid moves for a pawn"""
         assert coords.is_valid() and self[coords].is_pawn() and self[coords].is_on_side(player)
         valid_moves = []
@@ -195,7 +195,7 @@ class Board:
 
         return valid_moves
 
-    def generate_moves(self, coords: Coordinates, player: Player) -> List[Coordinates]:
+    def generate_moves(self, coords: Coordinates, player: Player) -> "List[Coordinates]":
         """Wrapper to tie each piece function together"""
         assert coords.is_valid()
         if self[coords].is_pawn():
@@ -289,7 +289,7 @@ class Board:
         # The king lives another day
         return False
 
-    def prune_illegal_moves(self, moves: List[tuple[Coordinates, Coordinates]], player: Player):
+    def prune_illegal_moves(self, moves: "List[tuple[Coordinates, Coordinates]]", player: Player):
         """Removes illegal moves from the list, which are moves that put yourself in check"""
         moves_copy = deepcopy(moves)
         for move in moves:
@@ -305,7 +305,7 @@ class ChessState:
 
 
     def __init__(self):
-        self.available_moves: List[tuple[Coordinates, Coordinates]] = []
+        self.available_moves: "List[tuple[Coordinates, Coordinates]]" = []
         self.current_turn: Player = Player.P1
         self.board: Board = Board.new_default_board()
         self.generate_all_legal_moves()
@@ -324,7 +324,8 @@ class ChessState:
                     continue
                 for move in self.board.generate_moves(coord, self.current_turn):
                     self.available_moves.append((coord, move))
-        self.available_moves = self.board.prune_illegal_moves(self.available_moves, self.current_turn)
+        self.available_moves = self.board.prune_illegal_moves(self.available_moves,
+            self.current_turn)
 
 class Chess:
     """Chess class to hold the internal state of the chess board"""
@@ -333,7 +334,7 @@ class Chess:
         """initialize the chess board"""
         self.state = ChessState()
         # Stores all of the moves in a game
-        self.__last_moves: List[FEN] = []
+        self.__last_moves: "List[FEN]" = []
         self.current_fen: FEN = FEN()
 
     def __set_board(self, fen: FEN) -> bool:
@@ -360,7 +361,7 @@ class Chess:
         """Import a board from a fen code"""
         return self.__set_board(FEN(fen))
 
-    def import_boards(self, fens: List[FEN]) -> bool:
+    def import_boards(self, fens: "List[FEN]") -> bool:
         """Import boards from a fen codes"""
         return not False in [self.__add_board(fen) for fen in fens]
 
@@ -368,7 +369,7 @@ class Chess:
         """Export the board to a fen code"""
         return self.current_fen
 
-    def export_boards(self) -> List[FEN]:
+    def export_boards(self) -> "List[FEN]":
         """Export all of the boards to a list of fen codes"""
         return self.__last_moves
 
@@ -390,9 +391,9 @@ class Chess:
         """check valid moves for a piece"""
         return (old, new) in self.state.available_moves
 
-    def get_valid_moves(self, current: Coordinates) -> List[Coordinates]:
+    def get_valid_moves(self, current: Coordinates) -> "List[Coordinates]":
         """get a list of valid moves for a piece"""
-        ret: List[Coordinates] = []
+        ret: "List[Coordinates]" = []
         for move in self.state.available_moves:
             if move[0] == current:
                 ret.append(move[1])
@@ -404,11 +405,11 @@ class Chess:
 
     def is_in_checkmate(self) -> bool:
         """check if the king is in checkmate"""
-        return self.is_in_check(self.state.current_turn) and len(self.state.available_moves) == 0
+        return self.is_in_check() and len(self.state.available_moves) == 0
 
     def is_in_stalemate(self) -> bool:
         """Check if there is stalemate (king is not in check but there are no available moves)"""
-        return (not self.is_in_check(self.state.available_moves)) and len(self.state.available_moves) == 0
+        return (not self.is_in_check()) and len(self.state.available_moves) == 0
 
     def get_state(self) -> ChessState:
         """Return the current game state"""
