@@ -11,6 +11,7 @@ Description:
 
 from typing import List
 
+from board import Board
 from fen import FEN
 from utils import Coordinates, Piece, Player
 
