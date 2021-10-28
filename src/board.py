@@ -14,6 +14,7 @@ Description:
 from copy import deepcopy
 from utils import Coordinates, Piece, Player
 
+
 class Board:
     """A wrapper for an 8x8 list of pieces to use coordinates to index"""
 
@@ -213,9 +214,7 @@ class Board:
             return self.generate_bishop_moves(coords, player)
         if self[coords].is_queen():
             return self.generate_queen_moves(coords, player)
-        if self[coords].is_king():
-            return self.generate_king_moves(coords, player)
-        return []
+        return self.generate_king_moves(coords, player) if self[coords].is_king() else []
 
     def is_in_check(self, player: Player) -> bool:
         """Returns true if the player is in check in the current position"""
@@ -233,62 +232,65 @@ class Board:
             Coordinates(2, -1),
             Coordinates(-2, -1),
         ]
-        for offset in knight_directions:
-            pos = king_pos + offset
-            if pos.is_valid() and self[pos].is_opponent(player) and self[pos].is_knight():
-                return True
 
-        # Queens
-        for direction in self.directions:
-            for scale in range(1, 8):
-                pos = king_pos + direction * scale
-                if not pos.is_valid():
-                    break
-                if self[pos] == Piece.NONE:
-                    continue
-                if self[pos].is_opponent(player) and self[pos].is_queen():
+        def __check_knights(king_pos: Coordinates, player: Player) -> bool:
+            for offset in knight_directions:
+                pos = king_pos + offset
+                if pos.is_valid() and self[pos].is_opponent(player) and self[pos].is_knight():
                     return True
-                break
+            return False
 
-        # Rooks
-        for direction in self.directions[0:4]:
-            for scale in range(1, 8):
-                pos = direction * scale + king_pos
-                if not pos.is_valid():
+        def __check_queens(king_pos: Coordinates, player: Player) -> bool:
+            for direction in self.directions:
+                for scale in range(1, 8):
+                    pos = king_pos + direction * scale
+                    if not pos.is_valid():
+                        break
+                    if self[pos] == Piece.NONE:
+                        continue
+                    if self[pos].is_opponent(player) and self[pos].is_queen():
+                        return True
                     break
-                if self[pos] == Piece.NONE:
-                    continue
-                if self[pos].is_opponent(player) and self[pos].is_rook():
-                    return True
-                break
+            return False
 
-        # Bishops
-        for direction in self.directions[4:8]:
-            for scale in range(1, 8):
-                pos = direction * scale + king_pos
-                if not pos.is_valid():
+        def __check_rooks(king_pos: Coordinates, player: Player) -> bool:
+            for direction in self.directions[0:4]:
+                for scale in range(1, 8):
+                    pos = direction * scale + king_pos
+                    if not pos.is_valid():
+                        break
+                    if self[pos] == Piece.NONE:
+                        continue
+                    if self[pos].is_opponent(player) and self[pos].is_rook():
+                        return True
                     break
-                if self[pos] == Piece.NONE:
-                    continue
-                if self[pos].is_opponent(player) and self[pos].is_bishop():
-                    return True
-                break
+            return False
 
-        # Pawns
-        if player == Player.P1:
-            pos = king_pos + Coordinates(1, 1)
-            if pos.is_valid() and self[pos] == Piece.BP:
-                return True
-            pos = king_pos + Coordinates(-1, 1)
-            if pos.is_valid() and self[pos] == Piece.BP:
-                return True
-        else:
-            pos = king_pos + Coordinates(1, -1)
-            if pos.is_valid() and self[pos] == Piece.WP:
-                return True
-            pos = king_pos + Coordinates(-1, -1)
-            if pos.is_valid() and self[pos] == Piece.WP:
-                return True
+        def __check_bishops(king_pos: Coordinates, player: Player) -> bool:
+            for direction in self.directions[4:8]:
+                for scale in range(1, 8):
+                    pos = direction * scale + king_pos
+                    if not pos.is_valid():
+                        break
+                    if self[pos] == Piece.NONE:
+                        continue
+                    if self[pos].is_opponent(player) and self[pos].is_bishop():
+                        return True
+                    break
+            return False
+
+        def __check_pawns(king_pos: Coordinates, player: Player) -> bool:
+            for direction in [1, -1]:
+                pos = king_pos + \
+                    Coordinates(direction, 1 if player == Player.P1 else -1)
+                if pos.is_valid() and self[pos].is_opponent(player) and self[pos].is_pawn():
+                    return True
+            return False
+
+        if __check_knights(king_pos, player) or __check_queens(king_pos, player) or \
+            __check_rooks(king_pos, player) or __check_bishops(king_pos, player) or \
+                __check_pawns(king_pos, player):
+            return True
 
         # The king lives another day
         return False
