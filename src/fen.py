@@ -158,7 +158,7 @@ class FEN:
     def __str__(self) -> str:
         return self.get_fen()
 
-    def __getitem__(self, key: "Union[str, int, Coordinates, list[Coordinates]]") -> Piece:
+    def __getitem__(self, key: Union[str, int, Coordinates, "list[Coordinates]"]) -> Piece:
         """
         Returns either the row or piece.
         Can be indexed using 1-8 or a-h or using algebraic notation a8
@@ -246,7 +246,8 @@ if __name__ == "__main__":
             board: str = local_fen.print_board()
             self.assertTrue(local_fen.valid[0], board)
             self.assertEqual(
-                local_fen.get_fen(), "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", board)
+                local_fen.get_fen(), "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                board)
 
         def test_valid(self):
             """Test known valid FENs"""
@@ -277,7 +278,9 @@ if __name__ == "__main__":
                              f'Actual: {actual}')
             expected = fen["a"]
             actual = numpy.array([Piece.WR, Piece.WP,
-                                  Piece.NONE, Piece.NONE, Piece.NONE, Piece.NONE, Piece.BP, Piece.BR])
+                                  Piece.NONE, Piece.NONE,
+                                  Piece.NONE, Piece.NONE,
+                                  Piece.BP, Piece.BR])
             self.assertTrue(numpy.array_equal(expected, actual), f'Expected: {expected}\n'
                             f'Actual: {actual}')
             expected = fen["7"]
