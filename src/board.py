@@ -293,6 +293,15 @@ class Board:
         # The king lives another day
         return False
 
+    def move(self, from_coords: Coordinates, to_coords: Coordinates, player: Player) -> None:
+        """Moves a piece from one location to another"""
+        assert from_coords.is_valid() and to_coords.is_valid()
+        assert self[from_coords].is_on_side(player)
+        assert self[to_coords] == Piece.NONE
+        assert to_coords in self.generate_moves(from_coords, player)
+        self[to_coords] = self[from_coords]
+        self[from_coords] = Piece.NONE
+
     def prune_illegal_moves(self, moves: "list[tuple[Coordinates, Coordinates]]", player: Player):
         """Removes illegal moves from the list, which are moves that put yourself in check"""
         moves_copy = deepcopy(moves)
