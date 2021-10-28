@@ -102,7 +102,7 @@ class Board:
             # The move is only valid there is a blank or opponent tile on the new location
             if new_coords.is_valid() and not self[new_coords].is_on_side(player):
                 valid_moves.append(new_coords)
-        return valid_moves
+        return sorted(valid_moves)
 
     def generate_king_moves(self, coords: Coordinates, player: Player) -> "list[Coordinates]":
         """Generates all the valid moves for a king"""
@@ -113,7 +113,7 @@ class Board:
             new_coords = coords + offset
             if new_coords.is_valid() and not self[new_coords].is_on_side(player):
                 valid_moves.append(new_coords)
-        return valid_moves
+        return sorted(valid_moves)
 
     def generate_queen_moves(self, coords: Coordinates, player: Player) -> "list[Coordinates]":
         """Generates all the valid moves for a queen"""
@@ -131,7 +131,7 @@ class Board:
                 valid_moves.append(new_coords)
                 if self[new_coords].is_opponent(player):
                     break
-        return valid_moves
+        return sorted(valid_moves)
 
     def generate_rook_moves(self, coords: Coordinates, player: Player) -> "list[Coordinates]":
         """Generates all the valid moves for a rook"""
@@ -149,7 +149,7 @@ class Board:
                 valid_moves.append(new_coords)
                 if self[new_coords].is_opponent(player):
                     break
-        return valid_moves
+        return sorted(valid_moves)
 
     def generate_bishop_moves(self, coords: Coordinates, player: Player) -> "list[Coordinates]":
         """Generates all the valid moves for a bishop"""
@@ -167,7 +167,7 @@ class Board:
                 valid_moves.append(new_coords)
                 if self[new_coords].is_opponent(player):
                     break
-        return valid_moves
+        return sorted(valid_moves)
 
     def generate_pawn_moves(self, coords: Coordinates, player: Player) -> "list[Coordinates]":
         """Generates all the valid moves for a pawn"""
@@ -197,7 +197,7 @@ class Board:
             if capture_coords.is_valid() and self[capture_coords].is_opponent(player):
                 valid_moves.append(capture_coords)
 
-        return valid_moves
+        return sorted(valid_moves)
 
     def generate_moves(self, coords: Coordinates, player: Player) -> "list[Coordinates]":
         """Wrapper to tie each piece function together"""
@@ -302,4 +302,4 @@ class Board:
             board_copy[move[0]] = Piece.NONE
             if board_copy.is_in_check(player):
                 moves_copy.remove(move)
-        return moves_copy
+        return sorted(moves_copy)
