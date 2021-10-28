@@ -136,9 +136,9 @@ class GameScreen(QWidget):
             self.setLineWidth(3)
             self.setStyleSheet("background-color: #f5f5dc;")
 
-    def __init__(self, settings: Settings, parent: Optional['QWidget'] = None) -> None:
+    def __init__(self, chess: Chess, settings: Settings, parent: Optional['QWidget'] = None) -> None:
         super().__init__(parent)
-        self._set_custom_properties(settings)
+        self._set_custom_properties(chess, settings)
         self._set_layout()
         self._add_elements()
 
@@ -192,10 +192,9 @@ class GameScreen(QWidget):
         self.layout.addLayout(player_layout, 2, 0, Qt.AlignBottom)
         self.layout.setRowStretch(2, 1)
 
-    def _set_custom_properties(self, settings: Settings) -> None:
+    def _set_custom_properties(self, chess: Chess, settings: Settings) -> None:
         """Sets properties unique to this widget."""
-        self.chess: Chess = Chess()
-        self.board: InteractiveBoard = InteractiveBoard(self.chess, settings)
+        self.board: InteractiveBoard = InteractiveBoard(chess, settings)
         self.players: "dict[Player, self.CapturedPiecesBar]" = {
             Player.P1: self.CapturedPiecesBar(self),
             Player.P2: self.CapturedPiecesBar(self)

@@ -20,6 +20,7 @@ from random import randint
 from PyQt5.QtGui import QCloseEvent, QIcon
 from PyQt5.QtWidgets import QAction, QApplication, QFileDialog
 from PyQt5.QtWidgets import QMainWindow, QMenu, QMessageBox, QWidget
+from chess import Chess
 
 from screens import EndGameScreen, GameScreen, MainMenuScreen, SettingsScreen
 from utils import Piece, Settings
@@ -39,7 +40,7 @@ class GameWindow(QMainWindow):
             END_OF_GAME = 7
 
         def __init__(self, parent: QMainWindow) -> None:
-            self.game_logic = None
+            self.game_logic: Chess = None
             self.game_ui: QWidget = None
             self.parent: QMainWindow = parent
             self.settings: Settings = Settings()
@@ -67,7 +68,9 @@ class GameWindow(QMainWindow):
                 self.state: self.State = self.State.LOADING
                 filename: "tuple[str, str]" = QFileDialog.getOpenFileName(self.parent, "Open File")
                 if filename[0] != "":
-                    self.game_ui: GameScreen = GameScreen(self.settings, self.parent)
+                    self.game_logic: Chess = Chess()
+                    self.game_ui: GameScreen = GameScreen(self.game_logic, self.settings,
+                        self.parent)
                     with open(filename[0], "rt", encoding="utf-8") as load_file:
                         self.game_ui.load(literal_eval(load_file.readline()))
                     self.state: self.State = self.State.GAME
@@ -87,7 +90,8 @@ class GameWindow(QMainWindow):
             """Starts a new game."""
             if self.state == self.State.MAIN_MENU:
                 self.state: self.State = self.State.LOADING
-                self.game_ui: GameScreen = GameScreen(self.settings, self.parent)
+                self.game_logic: Chess = Chess()
+                self.game_ui: GameScreen = GameScreen(self.game_logic, self.settings, self.parent)
                 self.state: self.State = self.State.GAME
                 self.parent.setCentralWidget(self.game_ui)
 
