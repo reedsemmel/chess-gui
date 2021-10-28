@@ -75,6 +75,8 @@ class Coordinates:
         """Comparison function"""
         if isinstance(other, Coordinates):
             return self.file == other.file and self.rank == other.rank
+        if isinstance(other, str):
+            return self.__str__() == other
         return False
 
     def __lt__(self, other) -> bool:
