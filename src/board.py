@@ -19,7 +19,7 @@ class Board:
     """A wrapper for an 8x8 list of pieces to use coordinates to index"""
 
     # Basic 8 directions in chess
-    directions = [
+    DIRECTION = (
         Coordinates(1, 0),
         Coordinates(0, 1),
         Coordinates(-1, 0),
@@ -28,7 +28,7 @@ class Board:
         Coordinates(-1, 1),
         Coordinates(1, -1),
         Coordinates(-1, -1),
-    ]
+    )
 
     def __init__(self):
         self._grid: "list[list[Piece]]" = [
@@ -54,17 +54,15 @@ class Board:
         """Creates a new board in the starting position"""
         board = Board()
 
-        black_pieces = [Piece.BR, Piece.BN, Piece.BB, Piece.BQ, Piece.BK,
-                        Piece.BB, Piece.BN, Piece.BR]
-        black_pawns = [Piece.BP for _ in range(8)]
-        white_pawns = [Piece.WP for _ in range(8)]
-        white_pieces = [Piece.WR, Piece.WN, Piece.WB, Piece.WQ, Piece.WK,
-                        Piece.WB, Piece.WN, Piece.WR]
+        black_piece = (Piece.BR, Piece.BN, Piece.BB, Piece.BQ, Piece.BK,
+                       Piece.BB, Piece.BN, Piece.BR)
+        white_pieces = (Piece.WR, Piece.WN, Piece.WB, Piece.WQ, Piece.WK,
+                        Piece.WB, Piece.WN, Piece.WR)
 
         for file in range(8):
-            board[Coordinates(file, 7)] = black_pieces[file]
-            board[Coordinates(file, 6)] = black_pawns[file]
-            board[Coordinates(file, 1)] = white_pawns[file]
+            board[Coordinates(file, 7)] = black_piece[file]
+            board[Coordinates(file, 6)] = Piece.BP
+            board[Coordinates(file, 1)] = Piece.WP
             board[Coordinates(file, 0)] = white_pieces[file]
 
         return board
@@ -87,7 +85,7 @@ class Board:
         assert coords.is_valid and self[coords].is_knight(
         ) and self[coords].is_on_side(player)
         # Knights move in an L and can jump over pieces
-        knight_directions = [
+        knight_directions = (
             Coordinates(1, 2),
             Coordinates(-1, 2),
             Coordinates(1, -2),
@@ -96,7 +94,7 @@ class Board:
             Coordinates(-2, 1),
             Coordinates(2, -1),
             Coordinates(-2, -1),
-        ]
+        )
 
         valid_moves = []
         for offset in knight_directions:
@@ -111,7 +109,7 @@ class Board:
         assert coords.is_valid() and self[coords].is_king(
         ) and self[coords].is_on_side(player)
         valid_moves = []
-        for offset in self.directions:
+        for offset in Board.DIRECTION:
             new_coords = coords + offset
             if new_coords.is_valid() and not self[new_coords].is_on_side(player):
                 valid_moves.append(new_coords)
@@ -123,7 +121,7 @@ class Board:
         ) and self[coords].is_on_side(player)
         valid_moves = []
 
-        for direction in self.directions:
+        for direction in Board.DIRECTION:
             for scale in range(1, 8):
                 new_coords = direction * scale + coords
                 if not new_coords.is_valid():
@@ -141,7 +139,7 @@ class Board:
         ) and self[coords].is_on_side(player)
         valid_moves = []
 
-        for direction in self.directions[0:4]:
+        for direction in Board.DIRECTION[0:4]:
             for scale in range(1, 8):
                 new_coords = direction * scale + coords
                 if not new_coords.is_valid():
@@ -159,7 +157,7 @@ class Board:
         ) and self[coords].is_on_side(player)
         valid_moves = []
 
-        for direction in self.directions[4:8]:
+        for direction in Board.DIRECTION[4:8]:
             for scale in range(1, 8):
                 new_coords = direction * scale + coords
                 if not new_coords.is_valid():
@@ -194,7 +192,7 @@ class Board:
                     valid_moves.append(new_coord)
 
         # Capture Diagonally
-        for capture_coords in [Coordinates(1, direction), Coordinates(-1, direction)]:
+        for capture_coords in (Coordinates(1, direction), Coordinates(-1, direction)):
             capture_coords = coords + capture_coords
             if capture_coords.is_valid() and self[capture_coords].is_opponent(player):
                 valid_moves.append(capture_coords)
@@ -222,7 +220,7 @@ class Board:
         king_pos = self.find_king(player)
 
         # Knights
-        knight_directions = [
+        knight_directions = (
             Coordinates(1, 2),
             Coordinates(-1, 2),
             Coordinates(1, -2),
@@ -231,7 +229,7 @@ class Board:
             Coordinates(-2, 1),
             Coordinates(2, -1),
             Coordinates(-2, -1),
-        ]
+        )
 
         def __check_knights(king_pos: Coordinates, player: Player) -> bool:
             for offset in knight_directions:
@@ -241,7 +239,7 @@ class Board:
             return False
 
         def __check_queens(king_pos: Coordinates, player: Player) -> bool:
-            for direction in self.directions:
+            for direction in Board.DIRECTION:
                 for scale in range(1, 8):
                     pos = king_pos + direction * scale
                     if not pos.is_valid():
@@ -254,7 +252,7 @@ class Board:
             return False
 
         def __check_rooks(king_pos: Coordinates, player: Player) -> bool:
-            for direction in self.directions[0:4]:
+            for direction in Board.DIRECTION[0:4]:
                 for scale in range(1, 8):
                     pos = direction * scale + king_pos
                     if not pos.is_valid():
@@ -267,7 +265,7 @@ class Board:
             return False
 
         def __check_bishops(king_pos: Coordinates, player: Player) -> bool:
-            for direction in self.directions[4:8]:
+            for direction in Board.DIRECTION[4:8]:
                 for scale in range(1, 8):
                     pos = direction * scale + king_pos
                     if not pos.is_valid():
@@ -280,7 +278,7 @@ class Board:
             return False
 
         def __check_pawns(king_pos: Coordinates, player: Player) -> bool:
-            for direction in [1, -1]:
+            for direction in (1, -1):
                 pos = king_pos + \
                     Coordinates(direction, 1 if player == Player.P1 else -1)
                 if pos.is_valid() and self[pos].is_opponent(player) and self[pos].is_pawn():
