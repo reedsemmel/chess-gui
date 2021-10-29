@@ -9,7 +9,7 @@ Description:
     Houses information and utilities for the basic chess game.
 """
 
-from typing import List
+from typing import List, Optional
 
 from board import Board
 from fen import FEN
@@ -89,7 +89,7 @@ class Chess:
         """Export all of the boards to a list of fen codes"""
         return self.__last_moves
 
-    def make_move(self, old: Coordinates, new: Coordinates) -> bool:
+    def make_move(self, old: Coordinates, new: Coordinates, promotion_piece: 'Optional[Coordinates]' = None) -> bool:
         """add a move to the list of moves"""
         move = (old, new)
         if not move in self.state.available_moves:
@@ -98,6 +98,12 @@ class Chess:
         # Apply actual move to the state.
         self.state.board[new] = self.state.board[old]
         self.state.board[old] = Piece.NONE
+
+        # Apply the pawn promotion if the new coordinate is on the front or back rank and the piece is a pawn
+        if new.rank in [0, 7] and self.state.board[new].is_pawn():
+            # It is the callers fault if they don't pass a promotion piece
+            assert promotion_piece is not None
+            self.state.board[new] = promotion_piece
 
         self.state.current_turn = Player.P1 if self.state.current_turn == Player.P2 else Player.P2
         self.state.generate_all_legal_moves()

@@ -11,11 +11,11 @@ Description:
     Classes and widgets for the interactive game board.
 """
 
-from typing import List
+from typing import List, Optional
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QGridLayout, QLabel, QWidget
+from PyQt5.QtWidgets import QGridLayout, QLabel, QMessageBox, QWidget
 
-from utils import Piece, Settings, Coordinates
+from utils import Piece, Settings, Coordinates, Player
 from chess import Chess
 
 class InteractiveBoard(QWidget):
@@ -65,19 +65,21 @@ class InteractiveBoard(QWidget):
 
         coord: Coordinates = Coordinates(file, rank)
 
-
-        # If a tile isn't selected, select it
         if not self.current_selection.is_valid():
             if self.chess.piece_at(coord).is_on_side(self.chess.state.current_turn):
-                print(coord, ":", self.chess.get_valid_moves(coord))
                 for tile in self.chess.get_valid_moves(coord):
                     self.tile_grid[tile.file][tile.rank].highlight_green()
                 self.current_selection = coord
-            else:
-                print("that tile doesn't have one of the current turn's pieces on it")
         else:
             if self.chess.check_move(self.current_selection, coord):
-                self.chess.make_move(self.current_selection, coord)
+                # See if we are moving a pawn to the end of the board
+                promotion_piece = Piece.NONE
+                if self.chess.piece_at(self.current_selection).is_pawn() and coord.rank in [0, 7]:
+                    promotion_piece = self.prompt_promotion_piece()
+                    if promotion_piece is None:
+                        # Unselect the piece if we cancel the move
+                        self.current_selection = Coordinates(-1, -1)
+                self.chess.make_move(self.current_selection, coord, promotion_piece)
                 self.redraw_whole_board(self.chess.get_state().board._grid)
             self.current_selection = Coordinates(-1, -1)
             for file in self.tile_grid:
@@ -111,6 +113,35 @@ class InteractiveBoard(QWidget):
                 self.draw_piece(cell, file_index, rank_index)
 
         return True
+
+    def prompt_promotion_piece(self) -> 'Optional[Piece]':
+        """Prompts the user to select a piece to promote to"""
+        popup = QMessageBox()
+        popup.setWindowTitle("Select promotion")
+        popup.setText("Select the piece you wish to promote, or cancel.")
+        popup.addButton("Queen", QMessageBox.ActionRole)
+        popup.addButton("Rook", QMessageBox.ActionRole)
+        popup.addButton("Bishop", QMessageBox.ActionRole)
+        popup.addButton("Knight", QMessageBox.ActionRole)
+        popup.addButton("Cancel", QMessageBox.RejectRole)
+
+        # Handler passed to the message box result
+        def handle_promotion_selection(button_text: str) -> 'Optional[Piece]':
+            if button_text == "Cancel":
+                return None
+            if button_text == "Queen":
+                # We want to return the white pieces if it is white's turn, and black otherwise
+                return Piece.WQ if self.chess.state.current_turn == Player.P1 else Piece.BQ
+            if button_text == "Rook":
+                return Piece.WR if self.chess.state.current_turn == Player.P1 else Piece.BR
+            if button_text == "Bishop":
+                return Piece.WB if self.chess.state.current_turn == Player.P1 else Piece.BB
+            if button_text == "Knight":
+                return Piece.WN if self.chess.state.current_turn == Player.P1 else Piece.BN
+            assert False, f"Invalid button text {button_text}"
+
+        popup.exec_()
+        return handle_promotion_selection(popup.clickedButton().text())
 
 
 
