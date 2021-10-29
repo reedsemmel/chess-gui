@@ -286,9 +286,16 @@ class Board:
                     return True
             return False
 
+        def __check_king(king_pos: Coordinates, player: Player) -> bool:
+            for direction in Board.DIRECTION:
+                pos = king_pos + direction
+                if pos.is_valid() and self[pos].is_opponent(player) and self[pos].is_king():
+                    return True
+            return False
+
         if __check_knights(king_pos, player) or __check_queens(king_pos, player) or \
             __check_rooks(king_pos, player) or __check_bishops(king_pos, player) or \
-                __check_pawns(king_pos, player):
+                __check_pawns(king_pos, player) or __check_king(king_pos, player):
             return True
 
         # The king lives another day
