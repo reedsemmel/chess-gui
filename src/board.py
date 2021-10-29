@@ -12,6 +12,7 @@ Description:
 """
 
 from copy import deepcopy
+import unittest
 from utils import Coordinates, Piece, Player
 
 
@@ -312,3 +313,155 @@ class Board:
             if board_copy.is_in_check(player):
                 moves_copy.remove(move)
         return sorted(moves_copy)
+
+
+if __name__ == "__main__":
+    class TestBoard(unittest.TestCase):
+        """Unit tests for the Board class"""
+
+        def test_getitem(self):
+            """Tests the __getitem__ function"""
+            board = Board().new_default_board()
+            self.assertEqual(board[Coordinates("d2")], Piece.WP)
+            self.assertEqual(board[Coordinates("e1")], Piece.WK)
+
+        def test_setitem(self):
+            """Tests the __setitem__ function"""
+            board = Board().new_default_board()
+            board[Coordinates("d2")] = Piece.WN
+            self.assertEqual(board[Coordinates("d2")], Piece.WN)
+
+        def test_new_empty_board(self):
+            """Tests the new_empty_board function"""
+            board = Board().new_empty_board()
+            self.assertEqual(board[Coordinates("d2")], Piece.NONE)
+            self.assertEqual(board[Coordinates("e1")], Piece.NONE)
+
+        def test_new_default_board(self):
+            """Tests the new_default_board function"""
+            board = Board().new_default_board()
+            self.assertEqual(board[Coordinates("d2")], Piece.WP)
+            self.assertEqual(board[Coordinates("e1")], Piece.WK)
+
+        def test_find_king(self):
+            """Tests the find_king function"""
+            board = Board().new_default_board()
+            self.assertEqual(board.find_king(Player.P1), "e1")
+            self.assertEqual(board.find_king(Player.P2), "e8")
+
+        def test_generate_knight_moves(self):
+            """Tests the generate_knight_moves function"""
+            board = Board().new_default_board()
+            self.assertEqual(board.generate_knight_moves(Coordinates("g1"), Player.P1),
+                             ["f3", "h3"])
+            self.assertEqual(board.generate_knight_moves(Coordinates("b1"), Player.P1),
+                             ["a3", "c3"])
+            board.move(Coordinates("g1"), Coordinates("f3"), Player.P1)
+            self.assertEqual(board.generate_knight_moves(Coordinates("f3"), Player.P1),
+                             ["d4", "e5", "g1", "g5", "h4"])
+            board.move(Coordinates("f3"), Coordinates("g5"), Player.P1)
+            self.assertEqual(board.generate_knight_moves(Coordinates("g5"), Player.P1),
+                             ["e4", "e6", "f3", "f7", "h3", "h7"])
+
+        def test_generate_bishop_moves(self):
+            """Tests the generate_bishop_moves function"""
+            board = Board().new_default_board()
+            self.assertEqual(board.generate_bishop_moves(
+                Coordinates("c1"), Player.P1), [])
+            self.assertEqual(board.generate_bishop_moves(
+                Coordinates("c8"), Player.P2), [])
+            board[Coordinates("b2")] = Piece.NONE
+            board[Coordinates("d2")] = Piece.NONE
+            board[Coordinates("b7")] = Piece.NONE
+            board[Coordinates("d7")] = Piece.NONE
+            self.assertEqual(board.generate_bishop_moves(Coordinates("c1"), Player.P1),
+                             ["a3", "b2", "d2", "e3", "f4", "g5", "h6"])
+            self.assertEqual(board.generate_bishop_moves(Coordinates("c8"), Player.P2),
+                             ["a6", "b7", "d7", "e6", "f5", "g4", "h3"])
+            board.move(Coordinates("c8"), Coordinates("a6"), Player.P2)
+            self.assertEqual(board.generate_bishop_moves(Coordinates("a6"), Player.P2),
+                             ["b5", "b7", "c4", "c8", "d3", "e2"])
+
+        def test_generate_rook_moves(self):
+            """Tests the generate_rook_moves function"""
+            board = Board().new_default_board()
+            self.assertEqual(board.generate_rook_moves(
+                Coordinates("a1"), Player.P1), [])
+            board.move(Coordinates("a2"), Coordinates("a4"), Player.P1)
+            self.assertEqual(board.generate_rook_moves(Coordinates("a1"), Player.P1),
+                             ["a2", "a3"])
+            board.move(Coordinates("a1"), Coordinates("a3"), Player.P1)
+            self.assertEqual(board.generate_rook_moves(Coordinates("a3"), Player.P1),
+                             ["a1", "a2", "b3", "c3", "d3", "e3", "f3", "g3", "h3"])
+
+        def test_generate_queen_moves(self):
+            """Tests the generate_queen_moves function"""
+            board = Board().new_default_board()
+            self.assertEqual(board.generate_queen_moves(
+                Coordinates("d1"), Player.P1), [])
+            board.move(Coordinates("d2"), Coordinates("d4"), Player.P1)
+            self.assertEqual(board.generate_queen_moves(Coordinates("d1"), Player.P1),
+                             ["d2", "d3"])
+            board.move(Coordinates("d1"), Coordinates("d3"), Player.P1)
+            self.assertEqual(board.generate_queen_moves(Coordinates("d3"), Player.P1),
+                             ["a3", "a6", "b3", "b5", "c3", "c4", "d1", "d2",
+                              "e3", "e4", "f3", "f5", "g3", "g6", "h3", "h7"])
+
+        def test_generate_king_moves(self):
+            """Tests the generate_king_moves function"""
+            board = Board().new_default_board()
+            self.assertEqual(board.generate_king_moves(
+                Coordinates("e1"), Player.P1), [])
+            self.assertEqual(board.generate_king_moves(
+                Coordinates("e8"), Player.P2), [])
+            board.move(Coordinates("e2"), Coordinates("e4"), Player.P1)
+            self.assertEqual(board.generate_king_moves(Coordinates("e1"), Player.P1),
+                             ["e2"])
+
+        def test_generate_pawn_moves(self):
+            """Tests the generate_pawn_moves function"""
+            board = Board().new_default_board()
+            self.assertEqual(board.generate_pawn_moves(
+                Coordinates("a2"), Player.P1), ["a3", "a4"])
+            self.assertEqual(board.generate_pawn_moves(
+                Coordinates("a7"), Player.P2), ["a5", "a6"])
+            board.move(Coordinates("a2"), Coordinates("a4"), Player.P1)
+            self.assertEqual(board.generate_pawn_moves(Coordinates("a4"), Player.P1),
+                             ["a5"])
+
+        def test_generate_moves(self):
+            """Tests the generate_moves function"""
+            board = Board().new_default_board()
+            self.assertEqual(board.generate_moves(Coordinates("a2"), Player.P1),
+                             board.generate_pawn_moves(Coordinates("a2"), Player.P1))
+            self.assertEqual(board.generate_moves(Coordinates("a7"), Player.P2),
+                             board.generate_pawn_moves(Coordinates("a7"), Player.P2))
+            self.assertEqual(board.generate_moves(Coordinates("e1"), Player.P1),
+                             board.generate_king_moves(Coordinates("e1"), Player.P1))
+            self.assertEqual(board.generate_moves(
+                Coordinates("c6"), Player.P2), [])
+
+        def test_is_in_check(self):
+            """Tests the is_in_check function"""
+            board = Board().new_default_board()
+            self.assertFalse(board.is_in_check(Player.P1))
+            self.assertFalse(board.is_in_check(Player.P2))
+            board[Coordinates("e7")] = Piece.NONE
+            board[Coordinates("e5")] = Piece.WR
+            self.assertTrue(board.is_in_check(Player.P2))
+            self.assertFalse(board.is_in_check(Player.P1))
+
+        def test_prune_illegal_moves(self):
+            """Tests the prune_illegal_moves function"""
+            board = Board().new_default_board()
+            board.move(Coordinates("e7"), Coordinates("e6"), Player.P2)
+            board[Coordinates("e5")] = Piece.WR
+            board[Coordinates("f5")] = Piece.WP
+
+            avail_moves: list[tuple(Coordinates, Coordinates)] = []
+            for move in board.generate_moves(Coordinates("e6"), Player.P2):
+                avail_moves.append((Coordinates("e6"), move))
+            self.assertEqual(board.prune_illegal_moves(
+                avail_moves, Player.P2), [])
+
+    unittest.main()
