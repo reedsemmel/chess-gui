@@ -38,11 +38,11 @@ class Board:
     def __getitem__(self, coord: Coordinates):
         # This is a low level primitive, caller should verify that the coords
         # are valid
-        assert coord.is_valid
+        assert coord.is_valid()
         return self._grid[coord.file][coord.rank]
 
     def __setitem__(self, coord: Coordinates, piece: Piece):
-        assert coord.is_valid
+        assert coord.is_valid()
         self._grid[coord.file][coord.rank] = piece
 
     @classmethod
@@ -83,7 +83,7 @@ class Board:
 
     def generate_knight_moves(self, coords: Coordinates, player: Player) -> "list[Coordinates]":
         """Generates all the moves a knight can perform"""
-        assert coords.is_valid and self[coords].is_knight(
+        assert coords.is_valid() and self[coords].is_knight(
         ) and self[coords].is_on_side(player)
         # Knights move in an L and can jump over pieces
         knight_directions = (
