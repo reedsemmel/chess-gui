@@ -74,7 +74,7 @@ class InteractiveBoard(QWidget):
             if self.chess.check_move(self.current_selection, coord):
                 # See if we are moving a pawn to the end of the board
                 promotion_piece = Piece.NONE
-                if self.chess.piece_at(self.current_selection).is_pawn() and coord.rank in [0, 7]:
+                if self.chess.piece_at(self.current_selection).is_pawn() and coord.rank in (0, 7):
                     promotion_piece = self.prompt_promotion_piece()
                     if promotion_piece is None:
                         # Unselect the piece if we cancel the move
