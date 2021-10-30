@@ -100,7 +100,7 @@ class Chess:
         self.state.board[old] = Piece.NONE
 
         # Apply the pawn promotion if the new coordinate is on the front or back rank and the piece is a pawn
-        if new.rank in [0, 7] and self.state.board[new].is_pawn():
+        if new.rank in (0, 7) and self.state.board[new].is_pawn():
             # It is the callers fault if they don't pass a promotion piece
             assert promotion_piece is not None
             self.state.board[new] = promotion_piece
