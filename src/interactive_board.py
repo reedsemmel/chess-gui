@@ -33,7 +33,7 @@ class InteractiveBoard(QWidget):
     def __init__(self, chess: Chess, settings: Settings) -> None:
         super().__init__()
         self.chess = chess
-        self.current_selection: Coordinates = Coordinates(-1, -1)
+        self.selected: Coordinates = Coordinates(-1, -1)
 
 
         # Set up an 8 by 8 grid
@@ -65,25 +65,25 @@ class InteractiveBoard(QWidget):
 
         coord: Coordinates = Coordinates(file, rank)
 
-        if not self.current_selection.is_valid():
+        if not self.selected.is_valid():
             if self.chess.piece_at(coord).is_on_side(self.chess.get_turn()):
                 for tile in self.chess.get_valid_moves(coord):
                     self.tile_grid[tile.file][tile.rank].highlight_green()
-                self.current_selection = coord
+                self.selected = coord
         else:
-            if self.chess.check_move(self.current_selection, coord):
+            if self.chess.check_move(self.selected, coord):
                 # See if we are moving a pawn to the end of the board
                 promotion_piece = Piece.NONE
-                if self.chess.piece_at(self.current_selection).is_pawn() and coord.rank in (0, 7):
+                if self.chess.piece_at(self.selected).is_pawn() and coord.rank in (0, 7):
                     promotion_piece = self.prompt_promotion_piece()
                     if promotion_piece is None:
                         # Unselect the piece if we cancel the move
-                        self.current_selection = Coordinates(-1, -1)
-                self.chess.make_move(self.current_selection, coord, promotion_piece)
+                        self.selected = Coordinates(-1, -1)
+                self.chess.make_move(self.selected, coord, promotion_piece)
                 self.redraw_whole_board(self.chess.get_grid())
-            self.current_selection = Coordinates(-1, -1)
-            for file in self.tile_grid:
-                for tile in file:
+            self.selected = Coordinates(-1, -1)
+            for grid_file in self.tile_grid:
+                for tile in grid_file:
                     tile.remove_highlight()
 
             if self.chess.is_in_check():
@@ -169,12 +169,15 @@ class InteractiveBoard(QWidget):
             self.setStyleSheet(f"background-color: {self.color};")
 
         def highlight_green(self):
+            """Highlights the tile green for showing it is an available move"""
             self.setStyleSheet("background-color: #22dd22;")
 
         def highlight_red(self):
+            """Highlights the tile red for showing that the king is in check"""
             self.setStyleSheet("background-color: #dd2222;")
 
         def remove_highlight(self):
+            """Resets the background to its original color"""
             self.setStyleSheet(f"background-color: {self.color};")
 
         def set_image(self, piece: Piece):
@@ -187,6 +190,7 @@ class InteractiveBoard(QWidget):
 
         def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None: # pylint: disable=invalid-name
             """Passes the click information to the parent widget along with the rank and file."""
+            a0.accept()
             self.parentWidget().handle_click(self.file, self.rank)
 
         # There is almost certainly a more efficient way to do this, but it is
