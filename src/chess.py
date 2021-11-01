@@ -148,3 +148,7 @@ class Chess:
     def get_turn(self) -> Player:
         """Gets the current turn"""
         return self.state.current_turn
+
+    def get_king(self) -> Coordinates:
+        """Gets the coordinates of the king"""
+        return self.state.board.find_king(self.state.current_turn)

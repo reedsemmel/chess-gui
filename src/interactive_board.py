@@ -56,39 +56,58 @@ class InteractiveBoard(QWidget):
         self.redraw_whole_board(self.chess.get_state().board._grid)
 
     # Called by ChessTile widgets and passes their position to this function
-    def handle_click(self, file: int, rank: int) -> None:
+    def handle_click(self, coord: Coordinates) -> None:
         """Handles a click from the user
 
         Called by a tile once it is clicked. The tile provides the arguments
         x and y from its position on the grid
         """
+        # Remove all indicators
+        for file in range(8):
+            for rank in range(8):
+                if self.tile_grid[file][rank].is_indicated:
+                    self.tile_grid[file][rank].set_indicator(False)
 
-        coord: Coordinates = Coordinates(file, rank)
-
-        if not self.selected.is_valid():
-            if self.chess.piece_at(coord).is_on_side(self.chess.get_turn()):
-                for tile in self.chess.get_valid_moves(coord):
-                    self.tile_grid[tile.file][tile.rank].highlight_green()
-                self.selected = coord
-        else:
-            if self.chess.check_move(self.selected, coord):
-                # See if we are moving a pawn to the end of the board
-                promotion_piece = Piece.NONE
-                if self.chess.piece_at(self.selected).is_pawn() and coord.rank in (0, 7):
-                    promotion_piece = self.prompt_promotion_piece()
-                    if promotion_piece is None:
-                        # Unselect the piece if we cancel the move
-                        self.selected = Coordinates(-1, -1)
-                self.chess.make_move(self.selected, coord, promotion_piece)
-                self.redraw_whole_board(self.chess.get_grid())
-            self.selected = Coordinates(-1, -1)
-            for grid_file in self.tile_grid:
-                for tile in grid_file:
-                    tile.remove_highlight()
-
+        # If we click on a friendly piece, we want to select it
+        if self.chess.piece_at(coord).is_on_side(self.chess.get_turn()) and self.selected != coord:
+            self.tile_grid[self.selected.file][self.selected.rank].set_selected(False)
+            self.selected = coord
+            # Highlight the available moves for this piece
+            self.tile_grid[self.selected.file][self.selected.rank].set_selected(True)
+            for move in self.chess.get_valid_moves(self.selected):
+                self.tile_grid[move.file][move.rank].set_indicator(True)
+            # Also highlight the king if it is in check
             if self.chess.is_in_check():
-                king_pos = self.chess.state.board.find_king(self.chess.get_turn())
-                self.tile_grid[king_pos.file][king_pos.rank].highlight_red()
+                king_pos = self.chess.get_king()
+                self.tile_grid[king_pos.file][king_pos.rank].set_checked(True)
+            return
+
+        # If a piece is selected, we want to move it if it is a valid move
+        if self.selected.is_valid() and coord in self.chess.get_valid_moves(self.selected):
+            promotion_choice: 'Optional[Piece]' = None
+            # Prompt for promotion if we are moving a pawn to the end of the board
+            if self.chess.piece_at(self.selected).is_pawn() and coord.rank in (0, 7):
+                promotion_choice = self.prompt_promotion_piece()
+                # If the user cancels, we want to unselect the piece
+                if promotion_choice is None:
+                    self.selected = Coordinates(-1, -1)
+                    return
+            # Remove check indicator if there is one
+            for file in range(8):
+                for rank in range(8):
+                    if self.tile_grid[file][rank].is_checked:
+                        self.tile_grid[file][rank].set_checked(False)
+            self.chess.make_move(self.selected, coord, promotion_choice)
+            self.redraw_whole_board(self.chess.get_grid())
+
+        # If the king is in check, highlight it
+        if self.chess.is_in_check():
+            king_pos = self.chess.get_king()
+            self.tile_grid[king_pos.file][king_pos.rank].set_checked(True)
+
+        # Unselect the tile
+        self.tile_grid[self.selected.file][self.selected.rank].set_selected(False)
+        self.selected = Coordinates(-1, -1)
 
     # Replaces the piece on (file, rank) with the piece provided
     def draw_piece(self, piece: Piece, file: int, rank: int) -> None:
@@ -153,11 +172,15 @@ class InteractiveBoard(QWidget):
         """
         def __init__(self, file: int, rank: int, settings: Settings) -> None:
             super().__init__()
-            self.file = file
-            self.rank = rank
+            self.file: int = file
+            self.rank: int = rank
             # Holds the image we display
-            self.label = QLabel(self)
-            self.current_piece = Piece.NONE
+            self.label: QLabel = QLabel(self)
+            self.current_piece: Piece = Piece.NONE
+            # These 3 are used for the stylesheet settings
+            self.is_selected: bool = False
+            self.is_indicated: bool = False
+            self.is_checked: bool = False
 
             # Chess is played on a checkered board. Adding the file and rank
             # index is an easy way to see which we are on
@@ -168,17 +191,34 @@ class InteractiveBoard(QWidget):
 
             self.setStyleSheet(f"background-color: {self.color};")
 
-        def highlight_green(self):
-            """Highlights the tile green for showing it is an available move"""
-            self.setStyleSheet("background-color: #22dd22;")
+        # Lot of boilerplate here, might make it better later
 
-        def highlight_red(self):
-            """Highlights the tile red for showing that the king is in check"""
-            self.setStyleSheet("background-color: #dd2222;")
+        def set_indicator(self, b: bool) -> None:
+            """Sets the indicator state"""
+            self.is_indicated = b
+            self.__update_css()
 
-        def remove_highlight(self):
-            """Resets the background to its original color"""
-            self.setStyleSheet(f"background-color: {self.color};")
+        def set_checked(self, b: bool) -> None:
+            """Sets the checked state"""
+            self.is_checked = b
+            self.__update_css()
+
+        def set_selected(self, b: bool) -> None:
+            """Sets the selected state"""
+            self.is_selected = b
+            self.__update_css()
+
+        # Highlight priority is selected > checked > indicated
+        def __update_css(self) -> None:
+            """Updates the CSS style sheet"""
+            if self.is_selected:
+                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #dddddd; padding: -5px")
+            elif self.is_checked:
+                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #dd2222; padding: -5px")
+            elif self.is_indicated:
+                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #22dd22; padding: -5px")
+            else:
+                self.setStyleSheet(f"background-color: {self.color};")
 
         def set_image(self, piece: Piece):
             """Sets the image in the tile to the one provided."""
@@ -191,7 +231,7 @@ class InteractiveBoard(QWidget):
         def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None: # pylint: disable=invalid-name
             """Passes the click information to the parent widget along with the rank and file."""
             a0.accept()
-            self.parentWidget().handle_click(self.file, self.rank)
+            self.parentWidget().handle_click(Coordinates(self.file, self.rank))
 
         # There is almost certainly a more efficient way to do this, but it is
         # fast enough and doesn't cause noticeable artifacts when resizing
