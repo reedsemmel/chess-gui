@@ -140,3 +140,11 @@ class Chess:
     def piece_at(self, coord: Coordinates) -> Piece:
         """Gets the piece at the coordinates for the current state"""
         return self.state.board[coord] if coord.is_valid() else Piece.NONE
+
+    def get_grid(self) -> "List[List[Piece]]":
+        """Gets the current state of the board"""
+        return self.state.board.get_grid()
+
+    def get_turn(self) -> Player:
+        """Gets the current turn"""
+        return self.state.current_turn

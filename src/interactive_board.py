@@ -66,7 +66,7 @@ class InteractiveBoard(QWidget):
         coord: Coordinates = Coordinates(file, rank)
 
         if not self.current_selection.is_valid():
-            if self.chess.piece_at(coord).is_on_side(self.chess.state.current_turn):
+            if self.chess.piece_at(coord).is_on_side(self.chess.get_turn()):
                 for tile in self.chess.get_valid_moves(coord):
                     self.tile_grid[tile.file][tile.rank].highlight_green()
                 self.current_selection = coord
@@ -80,14 +80,14 @@ class InteractiveBoard(QWidget):
                         # Unselect the piece if we cancel the move
                         self.current_selection = Coordinates(-1, -1)
                 self.chess.make_move(self.current_selection, coord, promotion_piece)
-                self.redraw_whole_board(self.chess.get_state().board._grid)
+                self.redraw_whole_board(self.chess.get_grid())
             self.current_selection = Coordinates(-1, -1)
             for file in self.tile_grid:
                 for tile in file:
                     tile.remove_highlight()
 
             if self.chess.is_in_check():
-                king_pos = self.chess.state.board.find_king(self.chess.state.current_turn)
+                king_pos = self.chess.state.board.find_king(self.chess.get_turn())
                 self.tile_grid[king_pos.file][king_pos.rank].highlight_red()
 
     # Replaces the piece on (file, rank) with the piece provided
@@ -131,13 +131,13 @@ class InteractiveBoard(QWidget):
                 return None
             if button_text == "Queen":
                 # We want to return the white pieces if it is white's turn, and black otherwise
-                return Piece.WQ if self.chess.state.current_turn == Player.P1 else Piece.BQ
+                return Piece.WQ if self.chess.get_turn() == Player.P1 else Piece.BQ
             if button_text == "Rook":
-                return Piece.WR if self.chess.state.current_turn == Player.P1 else Piece.BR
+                return Piece.WR if self.chess.get_turn() == Player.P1 else Piece.BR
             if button_text == "Bishop":
-                return Piece.WB if self.chess.state.current_turn == Player.P1 else Piece.BB
+                return Piece.WB if self.chess.get_turn() == Player.P1 else Piece.BB
             if button_text == "Knight":
-                return Piece.WN if self.chess.state.current_turn == Player.P1 else Piece.BN
+                return Piece.WN if self.chess.get_turn() == Player.P1 else Piece.BN
             assert False, f"Invalid button text {button_text}"
 
         popup.exec_()
