@@ -68,6 +68,11 @@ class Board:
 
         return board
 
+    def get_grid(self) -> "list[list[Piece]]":
+        """Returns the grid of pieces"""
+        # We want to copy the grid so that the caller can't modify it
+        return deepcopy(self._grid)
+
     def find_king(self, player: Player) -> Coordinates:
         """Returns the coordinates of the players king"""
         king_piece = Piece.WK if player == Player.P1 else Piece.BK
