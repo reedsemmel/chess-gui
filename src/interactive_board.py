@@ -212,11 +212,11 @@ class InteractiveBoard(QWidget):
         def __update_css(self) -> None:
             """Updates the CSS style sheet"""
             if self.is_selected:
-                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #dddddd; padding: -5px")
+                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #dddddd; padding: -5px;")
             elif self.is_checked:
-                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #dd2222; padding: -5px")
+                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #dd2222; padding: -5px;")
             elif self.is_indicated:
-                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #22dd22; padding: -5px")
+                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #22dd22; padding: -5px;")
             else:
                 self.setStyleSheet(f"background-color: {self.color};")
 
