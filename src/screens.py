@@ -206,28 +206,6 @@ class GameScreen(QWidget):
         self.layout: QGridLayout = QGridLayout(self)
         self.setLayout(self.layout)
 
-class EndGameScreen(QWidget):
-    """Screen that houses the end of game elements like the winner and other features."""
-    def __init__(self, parent: Optional['QWidget'] = None) -> None:
-        super().__init__(parent)
-        self._set_layout()
-        self._add_elements()
-
-    def _add_elements(self) -> None:
-        """Adds all elements unique to this screen to the layout."""
-        assert isinstance(self.layout, QGridLayout)
-        self._add_placeholder()
-
-    def _add_placeholder(self) -> None:
-        """Adds placeholder text to the layout."""
-        self.layout.addWidget(QLabel("This is the end of game screen.", self), 0, 0,
-            Qt.AlignCenter)
-
-    def _set_layout(self) -> None:
-        """Sets the widget's layout."""
-        self.layout: QGridLayout = QGridLayout(self)
-        self.setLayout(self.layout)
-
 class SettingsScreen(QWidget):
     """Screen that houses elements that allow user to change allowed settings."""
     def __init__(self, settings: Settings, parent: Optional['QWidget'] = None) -> None:

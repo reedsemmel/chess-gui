@@ -17,13 +17,14 @@ from ast import literal_eval
 from datetime import datetime
 from enum import Enum
 from random import randint
+from typing import Callable # pylint: disable=unused-import
 from PyQt5.QtGui import QCloseEvent, QIcon
-from PyQt5.QtWidgets import QAction, QApplication, QFileDialog
+from PyQt5.QtWidgets import QAction, QApplication, QFileDialog, QPushButton # pylint: disable=unused-import
 from PyQt5.QtWidgets import QMainWindow, QMenu, QMessageBox, QWidget
 from chess import Chess
 
-from screens import EndGameScreen, GameScreen, MainMenuScreen, SettingsScreen
-from utils import Piece, Settings
+from screens import GameScreen, MainMenuScreen, SettingsScreen
+from utils import Piece, Player, Settings
 
 class GameWindow(QMainWindow):
     """Main Window for the game that will house all the GUI elements."""
@@ -58,9 +59,20 @@ class GameWindow(QMainWindow):
             """Marks end of game and changes to end of game screen."""
             if self.state == self.State.GAME:
                 self.state: self.State = self.State.LOADING
-                self.game_ui: EndGameScreen = EndGameScreen(self.parent)
                 self.state: self.State = self.State.END_OF_GAME
-                self.parent.setCentralWidget(self.game_ui)
+
+        def get_end_of_game_message(self) -> str:
+            """Returns the message to display when the game ends."""
+            if self.state == self.State.END_OF_GAME:
+                assert self.game_logic is not None
+                if self.game_logic.is_in_stalemate():
+                    return "Stalemate! It's a draw!"
+                if self.game_logic.is_in_checkmate():
+                    name: str = self.settings.opponent_name if\
+                        self.game_logic.get_state().current_turn == Player.P1\
+                        else self.settings.player_name
+                    return f"Checkmate! {name} wins!"
+            return "Something went wrong!"
 
         def load(self) -> None:
             """Any actions to load from a previously saved game state would want to run here."""
@@ -78,6 +90,15 @@ class GameWindow(QMainWindow):
                 else:
                     self.state: self.State = self.State.MAIN_MENU
 
+        def new_game(self) -> None:
+            """Any actions to start a new game would want to run here."""
+            if self.state == self.State.END_OF_GAME:
+                self.state: self.State = self.State.LOADING
+                self.game_logic: Chess = Chess()
+                self.game_ui: GameScreen = GameScreen(self.game_logic, self.settings, self.parent)
+                self.state: self.State = self.State.GAME
+                self.parent.setCentralWidget(self.game_ui)
+
         def open_settings(self) -> None:
             """Any actions to open the settings screen would want to run here."""
             if self.state == self.State.MAIN_MENU:
@@ -93,6 +114,14 @@ class GameWindow(QMainWindow):
                 self.game_logic: Chess = Chess()
                 self.game_ui: GameScreen = GameScreen(self.game_logic, self.settings, self.parent)
                 self.state: self.State = self.State.GAME
+                self.parent.setCentralWidget(self.game_ui)
+
+        def reset(self) -> None:
+            """Resets the game to the main menu."""
+            if self.state == self.State.END_OF_GAME:
+                self.state: self.State = self.State.LOADING
+                self.game_ui: MainMenuScreen = MainMenuScreen(self.parent)
+                self.state: self.State = self.State.MAIN_MENU
                 self.parent.setCentralWidget(self.game_ui)
 
         def run(self) -> None:
@@ -144,6 +173,16 @@ class GameWindow(QMainWindow):
     def end_event(self) -> None:
         """Triggers the end of a game."""
         self.game.end()
+        end_game_message: QMessageBox = QMessageBox()
+        end_game_message.setWindowTitle("Game Over")
+        end_game_message.setText(self.game.get_end_of_game_message())
+        end_game_decisions: "dict[QPushButton, Callable]" = {}
+        for button_text, func in\
+            (("New Game", self.game.new_game), ("Main Menu", self.game.reset)):
+            end_game_decisions[end_game_message.addButton(button_text,
+                QMessageBox.ActionRole)] = func
+        end_game_message.exec()
+        end_game_decisions[end_game_message.clickedButton()].__call__()
 
     def load_event(self) -> None:
         """Triggers loading of a game."""
