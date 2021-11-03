@@ -24,7 +24,7 @@ from PyQt5.QtWidgets import QMainWindow, QMenu, QMessageBox, QWidget
 from chess import Chess
 
 from screens import GameScreen, MainMenuScreen, SettingsScreen
-from utils import Piece, Settings
+from utils import Piece, Player, Settings
 
 class GameWindow(QMainWindow):
     """Main Window for the game that will house all the GUI elements."""
@@ -60,6 +60,19 @@ class GameWindow(QMainWindow):
             if self.state == self.State.GAME:
                 self.state: self.State = self.State.LOADING
                 self.state: self.State = self.State.END_OF_GAME
+
+        def get_end_of_game_message(self) -> str:
+            """Returns the message to display when the game ends."""
+            if self.state == self.State.END_OF_GAME:
+                assert self.game_logic is not None
+                if self.game_logic.is_in_stalemate():
+                    return "Stalemate! It's a draw!"
+                if self.game_logic.is_in_checkmate():
+                    name: str = self.settings.opponent_name if\
+                        self.game_logic.get_state().current_turn == Player.P1\
+                        else self.settings.player_name
+                    return f"Checkmate! {name} wins!"
+            return "Something went wrong!"
 
         def load(self) -> None:
             """Any actions to load from a previously saved game state would want to run here."""
@@ -162,8 +175,7 @@ class GameWindow(QMainWindow):
         self.game.end()
         end_game_message: QMessageBox = QMessageBox()
         end_game_message.setWindowTitle("Game Over")
-        # Should be replaced by text based on info in game logic object.
-        end_game_message.setText("Placeholder")
+        end_game_message.setText(self.game.get_end_of_game_message())
         end_game_decisions: "dict[QPushButton, Callable]" = {}
         for button_text, func in\
             (("New Game", self.game.new_game), ("Main Menu", self.game.reset)):
