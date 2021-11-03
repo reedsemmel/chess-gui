@@ -17,9 +17,9 @@ from ast import literal_eval
 from datetime import datetime
 from enum import Enum
 from random import randint
-from typing import Callable #pylint: disable=unused-import
+from typing import Callable # pylint: disable=unused-import
 from PyQt5.QtGui import QCloseEvent, QIcon
-from PyQt5.QtWidgets import QAction, QApplication, QFileDialog, QPushButton #pylint: disable=unused-import
+from PyQt5.QtWidgets import QAction, QApplication, QFileDialog, QPushButton # pylint: disable=unused-import
 from PyQt5.QtWidgets import QMainWindow, QMenu, QMessageBox, QWidget
 from chess import Chess
 
