@@ -12,12 +12,12 @@ Description:
 from typing import Callable, Optional
 from PyQt5.QtCore import QRegExp, Qt
 from PyQt5.QtGui import QRegExpValidator, QResizeEvent
-from PyQt5.QtWidgets import QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel
+from PyQt5.QtWidgets import QFormLayout, QGridLayout, QHBoxLayout, QLabel
 from PyQt5.QtWidgets import QLineEdit, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 from chess import Chess
 
 from interactive_board import InteractiveBoard
-from utils import Piece, Player, Settings
+from utils import Settings
 
 def make_button(content: str, func: Callable, parent: Optional['QWidget'] = None) -> QPushButton:
     """Returns a button with the specified content and function."""
@@ -58,12 +58,20 @@ class MainMenuScreen(QWidget):
 
 class GameScreen(QWidget):
     """Screen that houses the actual game elements like the chessboard and other features."""
+
     class CenteredSquareContainer(QWidget):
         """Widget wrapper that keeps its child widget square and centered on both axes."""
+
         def __init__(self, child: QWidget, parent: QWidget):
             super().__init__(parent)
-            self._set_layout()
-            self._set_widget_properties()
+
+            # Set Layout
+            self.layout: QHBoxLayout = QHBoxLayout(self)
+
+            # Set Size Policy
+            self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+
+            # Add Child
             self.layout.addWidget(child)
 
         def resizeEvent(self, a0: QResizeEvent) -> None: # pylint: disable=invalid-name
@@ -76,135 +84,33 @@ class GameScreen(QWidget):
                 margin = round((height - width) / 2)
                 self.setContentsMargins(0, margin, 0, margin)
 
-        def _set_layout(self) -> None:
-            """Sets the widget's layout."""
-            self.layout: QHBoxLayout = QHBoxLayout(self)
-            self.setLayout(self.layout)
-
-        def _set_widget_properties(self) -> None:
-            """Sets the widgets's properties."""
-            self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-
-    class CapturedPiecesBar(QFrame):
-        """
-            Widget that creates a bar to display captured pieces
-            as an indicator of the state of the game.
-        """
-        def __init__(self, parent: QWidget) -> None:
-            super().__init__(parent)
-            self._set_custom_properties()
-            self._set_layout()
-            self._set_widget_properties()
-
-        def add_piece(self, piece: Piece) -> None:
-            """Adds a piece to the layout."""
-            self.pieces.append(piece)
-            piece_image: QLabel = QLabel(self)
-            piece_image.setPixmap(Piece.get_piece_pixmap(piece))
-            piece_image.setScaledContents(True)
-            self.layout.addWidget(piece_image)
-
-        def export_pieces(self) -> "tuple[int]":
-            """Returns tuple of current pieces in the bar."""
-            return tuple(int(piece) for piece in self.pieces)
-
-        def import_pieces(self, pieces: "tuple[int]") -> None:
-            """Sets the current pieces in the bar."""
-            for piece in pieces:
-                self.add_piece(Piece(piece))
-
-        def resizeEvent(self, a0: QResizeEvent) -> None: # pylint: disable=invalid-name
-            """Controls resizing to ensure the child widgets in the layout stay square."""
-            self.setMaximumWidth(a0.size().height() * (len(self.pieces) + 1))
-            super().resize(a0.size().height() * len(self.pieces), a0.size().height())
-
-        def _set_custom_properties(self) -> None:
-            """Sets properties unique to this widget."""
-            self.pieces: "list[Piece]" = []
-
-        def _set_layout(self) -> None:
-            """Sets the widget's layout."""
-            self.layout: QHBoxLayout = QHBoxLayout(self)
-            self.layout.setContentsMargins(0, 0, 0, 0)
-            self.layout.setSpacing(0)
-            self.setLayout(self.layout)
-
-        def _set_widget_properties(self) -> None:
-            """Sets the widgets's properties."""
-            self.setFixedHeight(50)
-            self.setFrameStyle(QFrame.StyledPanel | QFrame.Raised)
-            self.setLineWidth(3)
-            self.setStyleSheet("background-color: #f5f5dc;")
-
-    def __init__(self, chess: Chess, settings: Settings, parent: Optional['QWidget'] = None) -> None:
+    def __init__(self, chess: Chess, settings: Settings, parent: Optional['QWidget'] = None) -> None: # pylint: disable=line-too-long
         super().__init__(parent)
-        self._set_custom_properties(chess, settings)
-        self._set_layout()
-        self._add_elements()
 
-    def capture_piece(self, piece: Piece, player: Player) -> None:
-        """Adds captured piece to specified player's captured bar."""
-        self.players[player].add_piece(piece)
-
-    def load(self, states: "tuple[tuple[int, tuple[int]], tuple[int, tuple[int]]]") -> None: # pylint: disable=line-too-long
-        """Any actions to restore previously preserved game would want to run here."""
-        for (player, pieces) in states:
-            self.players[Player(player)].import_pieces(pieces)
-
-    def save(self)-> "tuple[tuple[int, tuple[int]], tuple[int, tuple[int]]]":
-        """Any actions to preserve the game state would want to run here."""
-        return ((int(Player.P1), self.players[Player.P1].export_pieces()),
-            (int(Player.P2), self.players[Player.P2].export_pieces()))
-
-    # def test_capture(self) -> None:
-    #     self.capture_piece(Piece.WB, Player.P1)
-    #     self.capture_piece(Piece.BB, Player.P2)
-
-    def _add_board(self) -> None:
-        """Adds the board to the layout."""
-        self.layout.addWidget(self.CenteredSquareContainer(self.board, self), 1, 0)
-        self.layout.setRowStretch(1, 8)
-
-    def _add_elements(self):
-        """Adds all the elements unique to this screen to the layout."""
-        assert isinstance(self.layout, QGridLayout)
-        self._add_enemy_side()
-        self._add_board()
-        self._add_player_side()
-
-    def _add_enemy_side(self) -> None:
-        """Adds the enemy side's layout to the layout."""
-        enemy_layout: QHBoxLayout = QHBoxLayout()
-        enemy_layout.addWidget(self.players[Player.P2], 0, Qt.AlignLeft | Qt.AlignVCenter)
-        enemy_layout.addWidget(QLabel(self.settings.opponent_name), 1, Qt.AlignRight
-            | Qt.AlignVCenter)
-        self.layout.addLayout(enemy_layout, 0, 0, Qt.AlignTop)
-        self.layout.setRowStretch(0, 1)
-
-    def _add_player_side(self) -> None:
-        """Adds the player side's layout to the layout."""
-        player_layout: QHBoxLayout = QHBoxLayout()
-        player_layout.addWidget(QLabel(self.settings.player_name), 1, Qt.AlignLeft
-            | Qt.AlignVCenter)
-        player_layout.addWidget(self.players[Player.P1], 0, Qt.AlignRight | Qt.AlignVCenter)
-        player_layout.addWidget(make_button("End Game", self.parent().end_event, self))
-        # player_layout.addWidget(make_button("Test", self.test_capture, self))
-        self.layout.addLayout(player_layout, 2, 0, Qt.AlignBottom)
-        self.layout.setRowStretch(2, 1)
-
-    def _set_custom_properties(self, chess: Chess, settings: Settings) -> None:
-        """Sets properties unique to this widget."""
+        # Add Instance Variables
         self.board: InteractiveBoard = InteractiveBoard(chess, settings)
-        self.players: "dict[Player, self.CapturedPiecesBar]" = {
-            Player.P1: self.CapturedPiecesBar(self),
-            Player.P2: self.CapturedPiecesBar(self)
-        }
         self.settings: Settings = settings
 
-    def _set_layout(self) -> None:
-        """Sets the widget's layout."""
+        # Set Layout
         self.layout: QGridLayout = QGridLayout(self)
-        self.setLayout(self.layout)
+
+        # Back Button
+        back_button: QPushButton = make_button("Back", self.parent().abandon_game_event, self)
+        self.layout.addWidget(back_button, 0, 0, 2, 1, Qt.AlignTop | Qt.AlignLeft)
+
+        # Add Board
+        board: GameScreen.CenteredSquareContainer = self.CenteredSquareContainer(self.board, self)
+        board.setContentsMargins(10, 10, 10, 10)
+        self.layout.addWidget(board, 0, 1, 2, 1)
+        self.layout.setColumnStretch(1, 1)
+
+        # Add Player Names
+        opponent_name: QLabel = QLabel(self.settings.opponent_name)
+        opponent_name.setContentsMargins(10, 10, 10, 10)
+        self.layout.addWidget(opponent_name, 0, 2, Qt.AlignTop | Qt.AlignHCenter)
+        player_name: QLabel = QLabel(self.settings.player_name)
+        player_name.setContentsMargins(10, 10, 10, 10)
+        self.layout.addWidget(player_name, 1, 2, Qt.AlignBottom | Qt.AlignHCenter)
 
 class SettingsScreen(QWidget):
     """Screen that houses elements that allow user to change allowed settings."""
