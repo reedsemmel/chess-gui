@@ -101,13 +101,13 @@ class FEN:
 
         rows: "list[list[Piece]]" = []
         for row in reversed(fields[0].split("/")):
-            currrow: "list[Piece]" = []
+            curr_row: "list[Piece]" = []
             for char in row:
                 if char.isdigit():
-                    currrow += [Piece.NONE] * int(char)
+                    curr_row += [Piece.NONE] * int(char)
                 elif char.lower() in "prbnqk":
-                    currrow.append(Piece.str_to_piece(char))
-            rows.append(currrow)
+                    curr_row.append(Piece.str_to_piece(char))
+            rows.append(curr_row)
 
         for rank, row in enumerate(rows):
             for file, piece in enumerate(row):
