@@ -34,6 +34,10 @@ class Board:
     def __init__(self):
         self._grid: "list[list[Piece]]" = [
             [Piece.NONE for _ in range(8)] for _ in range(8)]
+        # This variable is used to tell which pawn is able to be en passant'ed. It should have
+        # one of the elements be modified if a pawn moves up two places, and all reset to False
+        # after each turn.
+        self._en_passant_files: "list[bool]" = [False for _ in range(8)]
 
     def __getitem__(self, coord: Coordinates):
         # This is a low level primitive, caller should verify that the coords
@@ -202,6 +206,10 @@ class Board:
             capture_coords = coords + capture_coords
             if capture_coords.is_valid() and self[capture_coords].is_opponent(player):
                 valid_moves.append(capture_coords)
+            if capture_coords.is_valid() and self._en_passant_files[capture_coords.file]:
+                if self[capture_coords] == Piece.NONE and (player == Player.P1 and  \
+                    coords.rank == 4 or player == Player.P2 and coords.rank == 3):
+                    valid_moves.append(capture_coords)
 
         return sorted(valid_moves)
 
@@ -310,10 +318,25 @@ class Board:
         """Moves a piece from one location to another"""
         assert from_coords.is_valid() and to_coords.is_valid()
         assert self[from_coords].is_on_side(player)
-        assert self[to_coords] == Piece.NONE
         assert to_coords in self.generate_moves(from_coords, player)
         self[to_coords] = self[from_coords]
         self[from_coords] = Piece.NONE
+
+        print(self._en_passant_files)
+
+        # If we performed en passant, we need to remove the pawn
+        if self[to_coords].is_pawn() and abs(to_coords.file - from_coords.file) == 1:
+            if self._en_passant_files[to_coords.file] and to_coords.rank == 2:
+                self[Coordinates(to_coords.file, 3)] = Piece.NONE
+            if self._en_passant_files[to_coords.file] and to_coords.rank == 5:
+                self[Coordinates(to_coords.file, 4)] = Piece.NONE
+
+        # Clear en passant flags
+        self._en_passant_files = [False for _ in range(8)]
+
+        # If we move a pawn up two spaces we need to set its en_passant flag
+        if self[to_coords].is_pawn() and abs(to_coords.rank - from_coords.rank) == 2:
+            self._en_passant_files[to_coords.file] = True
 
     def prune_illegal_moves(self, moves: "list[tuple[Coordinates, Coordinates]]", player: Player):
         """Removes illegal moves from the list, which are moves that put yourself in check"""

@@ -95,9 +95,7 @@ class Chess:
         if not move in self.state.available_moves:
             return False
 
-        # Apply actual move to the state.
-        self.state.board[new] = self.state.board[old]
-        self.state.board[old] = Piece.NONE
+        self.state.board.move(old, new, self.state.current_turn)
 
         # Apply the pawn promotion if the new coordinate is on the front or back rank and the piece is a pawn
         if new.rank in (0, 7) and self.state.board[new].is_pawn():
