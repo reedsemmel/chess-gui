@@ -28,6 +28,7 @@ from re import fullmatch
 from pathlib import Path
 from operator import attrgetter
 from typing import Any, Dict, List, Union
+from PyQt5.QtCore import QSize
 
 from PyQt5.QtGui import QPixmap
 
@@ -35,7 +36,7 @@ from PyQt5.QtGui import QPixmap
 class Coordinates:
     """file and rank coordinate tuple"""
 
-    def __init__(self, alg_or_file: "Union[str, int]", rank: int = -1):
+    def __init__(self, alg_or_file: Union[str, int], rank: int = -1):
         if isinstance(alg_or_file, str) and len(alg_or_file) == 2:
             self.file = ord(alg_or_file[0]) - ord('a')
             self.rank = int(alg_or_file[1]) - 1
@@ -140,11 +141,13 @@ class Piece(Enum):
     def is_on_side(self, player: "Player") -> bool:
         """Returns True if the Piece is on the side of player"""
         if (
-            player == Player.P1 and self in (Piece.WR, Piece.WB, Piece.WN, Piece.WQ, Piece.WK, Piece.WP)
+            player == Player.P1 and self in (Piece.WR, Piece.WB, Piece.WN, Piece.WQ,
+                Piece.WK, Piece.WP)
         ):
             return True
         if (
-            player == Player.P2 and self in (Piece.BR, Piece.BB, Piece.BN, Piece.BQ, Piece.BK, Piece.BP)
+            player == Player.P2 and self in (Piece.BR, Piece.BB, Piece.BN, Piece.BQ,
+                Piece.BK, Piece.BP)
         ):
             return True
         return False
@@ -159,34 +162,34 @@ class Piece(Enum):
 
     def is_pawn(self) -> bool:
         """Returns True if the piece is a pawn"""
-        return self == Piece.BP or self == Piece.WP
+        return self in (Piece.BP, Piece.WP)
 
     def is_rook(self) -> bool:
         """Returns True if the piece is a rook"""
-        return self == Piece.BR or self == Piece.WR
+        return self in (Piece.BR, Piece.WR)
 
     def is_knight(self) -> bool:
         """Returns True if the piece is a knight"""
-        return self == Piece.BN or self == Piece.WN
+        return self in (Piece.BN, Piece.WN)
 
     def is_bishop(self) -> bool:
         """Returns True if the piece is a bishop"""
-        return self == Piece.BB or self == Piece.WB
+        return self in (Piece.BB, Piece.WB)
 
     def is_queen(self) -> bool:
         """Returns True if the piece is a queen"""
-        return self == Piece.BQ or self == Piece.WQ
+        return self in (Piece.BQ, Piece.WQ)
 
     def is_king(self) -> bool:
         """Returns True if the piece is a king"""
-        return self == Piece.BK or self == Piece.WK
+        return self in (Piece.BK, Piece.WK)
 
     @staticmethod
-    def get_valid_rook_moves(current: Coordinates) -> "List[Coordinates]":
+    def get_valid_rook_moves(current: Coordinates) -> List[Coordinates]:
         """Returns a list of valid rook moves."""
         if not current.is_valid():
             return []
-        moves: "List[Coordinates]" = [Coordinates(file, current.rank)
+        moves: List[Coordinates] = [Coordinates(file, current.rank)
                                     for file in range(8)]
         moves += [Coordinates(current.file, rank)
                   for rank in range(8)]
@@ -194,11 +197,11 @@ class Piece(Enum):
         return [move for move in moves if move.is_valid() and move != current]
 
     @staticmethod
-    def get_valid_bishop_moves(current: Coordinates) -> "List[Coordinates]":
+    def get_valid_bishop_moves(current: Coordinates) -> List[Coordinates]:
         """Returns a list of valid bishop moves."""
         if not current.is_valid():
             return []
-        moves: "List[Coordinates]" = [Coordinates(file, rank)
+        moves: List[Coordinates] = [Coordinates(file, rank)
                                     for file in range(8)
                                     for rank in range(8)
                                     if abs(file - current.file) == abs(rank - current.rank)]
@@ -206,11 +209,11 @@ class Piece(Enum):
         return [move for move in moves if move.is_valid() and move != current]
 
     @staticmethod
-    def get_valid_knight_moves(current: Coordinates) -> "List[Coordinates]":
+    def get_valid_knight_moves(current: Coordinates) -> List[Coordinates]:
         """Returns a list of valid knight moves."""
         if not current.is_valid():
             return []
-        moves: "List[Coordinates]" = [Coordinates(current.file + 2, current.rank + 1),
+        moves: List[Coordinates] = [Coordinates(current.file + 2, current.rank + 1),
                                     Coordinates(current.file + 2,
                                                 current.rank - 1),
                                     Coordinates(current.file - 2,
@@ -237,7 +240,7 @@ class Piece(Enum):
         """Returns a list of valid king moves."""
         if not current.is_valid():
             return []
-        moves: "List[Coordinates]" = [Coordinates(current.file + 1, current.rank + 1),
+        moves: List[Coordinates] = [Coordinates(current.file + 1, current.rank + 1),
                                     Coordinates(current.file + 1,
                                                 current.rank - 1),
                                     Coordinates(current.file - 1,
@@ -255,7 +258,7 @@ class Piece(Enum):
         return [move for move in moves if move.is_valid()]
 
     @staticmethod
-    def get_valid_white_pawn_moves(current: Coordinates) -> "List[Coordinates]":
+    def get_valid_white_pawn_moves(current: Coordinates) -> List[Coordinates]:
         """Returns a list of valid white pawn moves."""
         if not current.is_valid() or current.rank == 0:
             return []
@@ -265,7 +268,7 @@ class Piece(Enum):
         return sorted([Coordinates(current.file, current.rank + 1)])
 
     @staticmethod
-    def get_valid_black_pawn_moves(current: Coordinates) -> "List[Coordinates]":
+    def get_valid_black_pawn_moves(current: Coordinates) -> List[Coordinates]:
         """Returns a list of valid black pawn moves."""
         if not current.is_valid() or current.rank == 7:
             return []
@@ -275,9 +278,9 @@ class Piece(Enum):
         return sorted([Coordinates(current.file, current.rank - 1)])
 
     @staticmethod
-    def return_valid_moves(piece, current: Coordinates) -> "List[Coordinates]":
+    def return_valid_moves(piece, current: Coordinates) -> List[Coordinates]:
         """Returns valid moves for a certain piece at a certain location"""
-        valid_moves: "Dict[Piece, Any]" = {
+        valid_moves: Dict[Piece, Any] = {
             Piece.WR: Piece.get_valid_rook_moves,
             Piece.WB: Piece.get_valid_bishop_moves,
             Piece.WN: Piece.get_valid_knight_moves,
@@ -296,7 +299,7 @@ class Piece(Enum):
     @staticmethod
     def str_to_piece(piece_str: str) -> "Piece":
         """Converts a single char piece to a Piece using the rules of FEN"""
-        str_to_piece: "dict[str, Piece]" = {
+        str_to_piece: Dict[str, Piece] = {
             ' ': Piece.NONE,
             'P': Piece.WP,
             'R': Piece.WR,
@@ -317,7 +320,7 @@ class Piece(Enum):
         return self.value
 
     def __str__(self) -> str:
-        piece_to_str: "dict[Piece, str]" = {
+        piece_to_str: Dict[Piece, str] = {
             Piece.NONE: ' ',
             Piece.WP: 'P',
             Piece.WR: 'R',
@@ -348,42 +351,71 @@ class Player(Enum):
 class Settings:
     """Holds all configurable values for the game and provides a method to modify them."""
 
+    DEFAULT_FONT_SIZE: int = 12
+    DEFAULT_WINDOW_SIZE: QSize = QSize(853, 480)
+    _ALPHA_NUM_REGEX: str = "([A-Za-z]|[0-9]|[ ])+"
+    _HEX_REGEX: str = "^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$"
+
     def __init__(self) -> None:
-        self.player_name: str = "Player 1"
-        self.opponent_name: str = "Player 2"
+        self.configurables: Dict[str, Dict[str, Any]] = {
+            "player_name": {
+                "form_header": "Player Name: ",
+                "handle_func": lambda value, check=True:
+                    self._handle_change("player_name", value, check),
+                "max_length": 20,
+                "regex": self._ALPHA_NUM_REGEX,
+                "value": "Player 1"
+            },
+            "opponent_name": {
+                "form_header": "Opponent Name: ",
+                "handle_func": lambda value, check=True:
+                    self._handle_change("opponent_name", value, check),
+                "max_length": 20,
+                "regex": self._ALPHA_NUM_REGEX,
+                "value": "Player 2"
+            },
+            "primary_color": {
+                "form_header": "Primary Color: ",
+                "handle_func": lambda value, check=True:
+                    self._handle_change("primary_color", value, check),
+                "max_length": 7,
+                "regex": self._HEX_REGEX,
+                "value": "#573D11"
+            },
+            "secondary_color": {
+                "form_header": "Secondary Color: ",
+                "handle_func": lambda value, check=True:
+                    self._handle_change("secondary_color", value, check),
+                "max_length": 7,
+                "regex": self._HEX_REGEX,
+                "value": "#DCB167"
+            }
+        }
 
-        self.primary_color: str = "#573D11"
-        self.secondary_color: str = "#DCB167"
+    @property
+    def player_name(self) -> str:
+        """Returns the player name."""
+        return self.configurables["player_name"]["value"]
 
-    def change_name(self, new_name: str, check: bool = True) -> None:
-        """Changes player name given it contains only alphanumeric characters."""
-        if check:
-            if bool(fullmatch("([A-Za-z]|[0-9]|[ ])+", new_name)):
-                self.player_name: str = new_name
-        else:
-            self.player_name: str = new_name
+    @property
+    def opponent_name(self) -> str:
+        """Returns the opponent name."""
+        return self.configurables["opponent_name"]["value"]
 
-    def change_primary_color(self, new_color_hex: str, check: bool = True) -> None:
-        """Changes primary color given the new hex is valid."""
-        if check:
-            if self._is_valid_hex(new_color_hex):
-                self.primary_color: str = new_color_hex
-        else:
-            self.primary_color: str = new_color_hex
+    @property
+    def primary_color(self) -> str:
+        """Returns the primary color."""
+        return self.configurables["primary_color"]["value"]
 
-    def change_secondary_color(self, new_color_hex: str, check: bool = True) -> None:
-        """Changes secondary color given the new hex is valid."""
-        if check:
-            if self._is_valid_hex(new_color_hex):
-                self.secondary_color: str = new_color_hex
-        else:
-            self.secondary_color: str = new_color_hex
+    @property
+    def secondary_color(self) -> str:
+        """Returns the secondary color."""
+        return self.configurables["secondary_color"]["value"]
 
-    @staticmethod
-    def _is_valid_hex(color_hex: str) -> bool:
-        """Checks if the color hex is valid by using a regex."""
-        return bool(fullmatch("^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$", color_hex))
-
+    def _handle_change(self, configurable: str, value: str, check: bool = True) -> None:
+        """Handles a change to a configurable value."""
+        if not check or bool(fullmatch(self.configurables[configurable]["regex"], value)):
+            self.configurables[configurable]["value"] = value
 
 if __name__ == "__main__":
     import unittest
@@ -528,28 +560,25 @@ if __name__ == "__main__":
 
         def test_invalid_name_change(self) -> None:
             """Tests that invalid names are rejected."""
-            self.settings.change_name("This! is! invalid!")
-            self.assertEqual(self.settings.player_name, "Player 1",
-                f"Player name was changed from \"Player 1\" to \"{self.settings.player_name}\"")
+            for each in ("This! is! invalid!",):
+                self.settings.configurables["player_name"]["handle_func"](each)
+                self.assertEqual(self.settings.player_name, "Player 1",
+                    f"Player name was changed from \"Player 1\" to \"{self.settings.player_name}\"")
 
-        def test_invalid_hexes(self) -> None:
-            """Tests that invalid hexes are detected as such."""
-            self.assertFalse(self.settings._is_valid_hex("#invali"), # pylint: disable=protected-access
-                "Invalid hex #invali accepted")
-            self.assertFalse(self.settings._is_valid_hex("#dhexes"), # pylint: disable=protected-access
-                "Invalid hex #dhexes accepted")
-            self.assertFalse(self.settings._is_valid_hex("#12345!"), # pylint: disable=protected-access
-                "Invalid hex #12345! accepted")
+                self.settings.configurables["opponent_name"]["handle_func"](each)
+                self.assertEqual(self.settings.opponent_name, "Player 2",
+                    f"Player name was changed from \"Player 2\" to \"{self.settings.opponent_name}\"") # pylint: disable=line-too-long
 
         def test_invalid_color_changes(self) -> None:
             """Tests that invalid colors are rejected."""
-            self.settings.change_primary_color("#invali")
-            self.assertEqual(self.settings.primary_color, "#573D11",
-                f"Primary color was changed from #573D11 to {self.settings.primary_color}")
+            for each in ("#invali", "#dhexes", "#12345!"):
+                self.settings.configurables["primary_color"]["handle_func"](each)
+                self.assertEqual(self.settings.primary_color, "#573D11",
+                    f"Primary color was changed from #573D11 to {self.settings.primary_color}")
 
-            self.settings.change_secondary_color("#dhexes")
-            self.assertEqual(self.settings.secondary_color, "#DCB167",
-                f"Secondary color was changed from #DCB167 to {self.settings.secondary_color}")
+                self.settings.configurables["secondary_color"]["handle_func"](each)
+                self.assertEqual(self.settings.secondary_color, "#DCB167",
+                    f"Secondary color was changed from #DCB167 to {self.settings.secondary_color}")
 
 
     class SettingsValidInputsTestCase(unittest.TestCase):
@@ -572,28 +601,25 @@ if __name__ == "__main__":
 
         def test_valid_name_change(self) -> None:
             """Tests that valid names are accepted."""
-            self.settings.change_name("This is valid 123")
-            self.assertEqual(self.settings.player_name, "This is valid 123",
-                "Failed to change player name from \"Player 1\" to \"This is valid 123\"")
+            for each in ("This is valid 123",):
+                self.settings.configurables["player_name"]["handle_func"](each)
+                self.assertEqual(self.settings.player_name, each,
+                    f"Failed to change player name from \"Player 1\" to \"{each}\"")
 
-        def test_valid_hexes(self):
-            """Tests that valid hexes are detected as such."""
-            self.assertTrue(self.settings._is_valid_hex("#123456"), # pylint: disable=protected-access
-                "Valid hex #123456 not accepted")
-            self.assertTrue(self.settings._is_valid_hex("#cf3445"), # pylint: disable=protected-access
-                "Valid hex #cf3445 not accepted")
-            self.assertTrue(self.settings._is_valid_hex("#FFF"), # pylint: disable=protected-access
-                "Valid hex #FFF not accepted")
+                self.settings.configurables["opponent_name"]["handle_func"](each)
+                self.assertEqual(self.settings.opponent_name, each,
+                    f"Failed to change opponent name from \"Player 2\" to \"{each}\"")
 
         def test_valid_color_changes(self):
             """Tests that valid colors are accepted."""
-            self.settings.change_primary_color("#FFF")
-            self.assertEqual(self.settings.primary_color, "#FFF",
-                "Failed to change primary color from #573D11 to #FFF")
+            for each in ("#123456", "#cf3445", "#FFF"):
+                self.settings.configurables["primary_color"]["handle_func"](each)
+                self.assertEqual(self.settings.primary_color, each,
+                    f"Failed to change primary color from #573D11 to {each}")
 
-            self.settings.change_secondary_color("#cf3445")
-            self.assertEqual(self.settings.secondary_color, "#cf3445",
-                "Failed to change secondary color from #DCB167 to #cf3445")
+                self.settings.configurables["secondary_color"]["handle_func"](each)
+                self.assertEqual(self.settings.secondary_color, each,
+                    f"Failed to change secondary color from #DCB167 to {each}")
 
 
     class CoordinatesUnitTest(unittest.TestCase):
