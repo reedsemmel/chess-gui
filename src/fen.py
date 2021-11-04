@@ -28,7 +28,7 @@ class FEN:
     The later fields are only valid if valid[0] is True
 
     board: Board the chess board, indexed by Coordinates
-    turns: bool the color to go next, 0 for white, 1 for black
+    turns: Player the player to go next
     castling: str the castling rights
     en_passant: str the en passant square
     half_and_full_move_clock: tuple[int, int] the half move and full move clock
@@ -85,7 +85,7 @@ class FEN:
 
         self.valid: "tuple[bool, bool]" = (False, False)
         self.board: Board = Board.new_empty_board()
-        self.turns: bool = 0
+        self.turns: Player = Player.P1
         self.castling: str = ""
         self.en_passant: str = ""
         self.half_and_full_move_clock: "tuple[int, int]" = (0, 0)
@@ -117,7 +117,7 @@ class FEN:
             return
 
         self.valid: "tuple[bool, bool]" = (False, True)
-        self.turns: bool = fields[1].lower() == "b"
+        self.turns: Player = Player.P1 if fields[1].lower() == "w" else Player.P2
         self.castling: str = fields[2]
         self.en_passant: str = fields[3]
         self.half_and_full_move_clock: "tuple[int, int]" = (
@@ -152,7 +152,7 @@ class FEN:
 
         return " ".join([
             board,
-            "b" if self.turns else "w",
+            "w" if self.turns == Player.P1 else "b",
             self.castling,
             self.en_passant,
             str(self.half_and_full_move_clock[0]),
@@ -184,7 +184,7 @@ class FEN:
             for file in range(8):
                 ret += f"│\033[4m{self.board[Coordinates(file, rank)]}\033[0m"
             ret += "│\n"
-        ret += f"{'B' if self.turns else 'W'} to go\n"
+        ret += f"{'W' if self.turns == Player.P1 else 'B'} to go\n"
         if self.castling != "-":
             ret += f"Castling: {self.castling}\n"
         if self.en_passant != "-":
