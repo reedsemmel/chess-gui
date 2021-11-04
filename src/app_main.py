@@ -246,7 +246,7 @@ class GameWindow(QMainWindow):
 
     def _set_window_properties(self) -> None:
         """Sets the properties of the window such as size and title."""
-        self.setGeometry(0, 0, 853, 480)
+        self.setGeometry(QRect(QPoint(0, 0), Settings.DEFAULT_WINDOW_SIZE))
         self.setWindowTitle("Chess")
 
 if __name__ == '__main__':
