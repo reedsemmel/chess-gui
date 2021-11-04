@@ -13,7 +13,6 @@ Description:
 
 import sys
 
-from ast import literal_eval
 from datetime import datetime
 from enum import Enum
 from random import randint
@@ -46,6 +45,14 @@ class GameWindow(QMainWindow):
             self.parent: QMainWindow = parent
             self.settings: Settings = Settings()
             self.state: self.State = self.State.PRE_LAUNCH
+
+        def abandon(self) -> None:
+            """Any actions to abandon the game would want to run here."""
+            if self.state == self.State.GAME:
+                self.state: self.State = self.State.LOADING
+                self.game_ui: MainMenuScreen = MainMenuScreen(self.parent)
+                self.state: self.State = self.State.MAIN_MENU
+                self.parent.setCentralWidget(self.game_ui)
 
         def close_settings(self) -> None:
             """Any actions to close the settings screen would want to run here."""
@@ -84,7 +91,7 @@ class GameWindow(QMainWindow):
                     self.game_ui: GameScreen = GameScreen(self.game_logic, self.settings,
                         self.parent)
                     with open(filename[0], "rt", encoding="utf-8") as load_file:
-                        self.game_ui.load(literal_eval(load_file.readline()))
+                        load_file.readlines()
                     self.state: self.State = self.State.GAME
                     self.parent.setCentralWidget(self.game_ui)
                 else:
@@ -140,7 +147,7 @@ class GameWindow(QMainWindow):
                     f"chess_game_{current_datetime_string}")
                 if filename[0] != "":
                     with open(filename[0], "wt", encoding="utf-8") as save_file:
-                        save_file.write(str(self.game_ui.save()))
+                        save_file.write("")
                 self.state: self.State = self.State.GAME
 
     def __init__(self) -> None:
@@ -150,16 +157,29 @@ class GameWindow(QMainWindow):
 
         self.game: GameWindow.Game = GameWindow.Game(self)
 
+    def abandon_game_event(self) -> None:
+        """Abandon the current game."""
+        abandon_confirmation: QMessageBox = QMessageBox(
+            QMessageBox.Question,
+            "Abandon Game",
+            "Are you sure you want to abandon the current game?",
+            QMessageBox.Yes | QMessageBox.No,
+            self)
+        abandon_decision: QMessageBox.StandardButton = abandon_confirmation.exec()
+        if abandon_decision == QMessageBox.Yes:
+            self.game.abandon()
+
     def closeEvent(self, event: QCloseEvent) -> None: # pylint: disable=invalid-name
         """
             Ask for confirmation before closing window.
             Any auto saving would want to be triggered here.
         """
-        close_confirmation: QMessageBox = QMessageBox()
-        close_confirmation.setWindowTitle("Quit")
-        close_confirmation.setText("Are you sure you want to quit?")
-        close_confirmation.setStandardButtons(QMessageBox.Yes
-            | QMessageBox.No)
+        close_confirmation: QMessageBox = QMessageBox(
+            QMessageBox.Question,
+            "Quit",
+            "Are you sure you want to quit?",
+            QMessageBox.Yes | QMessageBox.No,
+            self)
         close_decision: QMessageBox.StandardButton = close_confirmation.exec()
         if close_decision == QMessageBox.Yes:
             return super().closeEvent(event)
