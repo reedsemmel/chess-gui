@@ -16,9 +16,10 @@ import sys
 from datetime import datetime
 from enum import Enum
 from random import randint
-from typing import Callable # pylint: disable=unused-import
+from typing import Callable, Dict, Tuple
+from PyQt5.QtCore import QPoint, QRect
 from PyQt5.QtGui import QCloseEvent, QIcon
-from PyQt5.QtWidgets import QAction, QApplication, QFileDialog, QPushButton # pylint: disable=unused-import
+from PyQt5.QtWidgets import QAction, QApplication, QFileDialog, QPushButton
 from PyQt5.QtWidgets import QMainWindow, QMenu, QMessageBox, QWidget
 from chess import Chess
 
@@ -49,24 +50,24 @@ class GameWindow(QMainWindow):
         def abandon(self) -> None:
             """Any actions to abandon the game would want to run here."""
             if self.state == self.State.GAME:
-                self.state: self.State = self.State.LOADING
+                self.state: GameWindow.Game.State = self.State.LOADING
                 self.game_ui: MainMenuScreen = MainMenuScreen(self.parent)
-                self.state: self.State = self.State.MAIN_MENU
+                self.state: GameWindow.Game.State = self.State.MAIN_MENU
                 self.parent.setCentralWidget(self.game_ui)
 
         def close_settings(self) -> None:
             """Any actions to close the settings screen would want to run here."""
             if self.state == self.State.SETTINGS:
-                self.state: self.State = self.State.LOADING
+                self.state: GameWindow.Game.State = self.State.LOADING
                 self.game_ui: MainMenuScreen = MainMenuScreen(self.parent)
-                self.state: self.State = self.State.MAIN_MENU
+                self.state: GameWindow.Game.State = self.State.MAIN_MENU
                 self.parent.setCentralWidget(self.game_ui)
 
         def end(self) -> None:
             """Marks end of game and changes to end of game screen."""
             if self.state == self.State.GAME:
-                self.state: self.State = self.State.LOADING
-                self.state: self.State = self.State.END_OF_GAME
+                self.state: GameWindow.Game.State = self.State.LOADING
+                self.state: GameWindow.Game.State = self.State.END_OF_GAME
 
         def get_end_of_game_message(self) -> str:
             """Returns the message to display when the game ends."""
@@ -84,71 +85,71 @@ class GameWindow(QMainWindow):
         def load(self) -> None:
             """Any actions to load from a previously saved game state would want to run here."""
             if self.state in (self.State.MAIN_MENU, self.State.GAME):
-                self.state: self.State = self.State.LOADING
-                filename: "tuple[str, str]" = QFileDialog.getOpenFileName(self.parent, "Open File")
+                self.state: GameWindow.Game.State = self.State.LOADING
+                filename: Tuple[str, str] = QFileDialog.getOpenFileName(self.parent, "Open File")
                 if filename[0] != "":
                     self.game_logic: Chess = Chess()
                     self.game_ui: GameScreen = GameScreen(self.game_logic, self.settings,
                         self.parent)
                     with open(filename[0], "rt", encoding="utf-8") as load_file:
                         load_file.readlines()
-                    self.state: self.State = self.State.GAME
+                    self.state: GameWindow.Game.State = self.State.GAME
                     self.parent.setCentralWidget(self.game_ui)
                 else:
-                    self.state: self.State = self.State.MAIN_MENU
+                    self.state: GameWindow.Game.State = self.State.MAIN_MENU
 
         def new_game(self) -> None:
             """Any actions to start a new game would want to run here."""
             if self.state == self.State.END_OF_GAME:
-                self.state: self.State = self.State.LOADING
+                self.state: GameWindow.Game.State = self.State.LOADING
                 self.game_logic: Chess = Chess()
                 self.game_ui: GameScreen = GameScreen(self.game_logic, self.settings, self.parent)
-                self.state: self.State = self.State.GAME
+                self.state: GameWindow.Game.State = self.State.GAME
                 self.parent.setCentralWidget(self.game_ui)
 
         def open_settings(self) -> None:
             """Any actions to open the settings screen would want to run here."""
             if self.state == self.State.MAIN_MENU:
-                self.state: self.State = self.State.LOADING
+                self.state: GameWindow.Game.State = self.State.LOADING
                 self.game_ui: SettingsScreen = SettingsScreen(self.settings, self.parent)
-                self.state: self.State = self.State.SETTINGS
+                self.state: GameWindow.Game.State = self.State.SETTINGS
                 self.parent.setCentralWidget(self.game_ui)
 
         def play(self) -> None:
             """Starts a new game."""
             if self.state == self.State.MAIN_MENU:
-                self.state: self.State = self.State.LOADING
+                self.state: GameWindow.Game.State = self.State.LOADING
                 self.game_logic: Chess = Chess()
                 self.game_ui: GameScreen = GameScreen(self.game_logic, self.settings, self.parent)
-                self.state: self.State = self.State.GAME
+                self.state: GameWindow.Game.State = self.State.GAME
                 self.parent.setCentralWidget(self.game_ui)
 
         def reset(self) -> None:
             """Resets the game to the main menu."""
             if self.state == self.State.END_OF_GAME:
-                self.state: self.State = self.State.LOADING
+                self.state: GameWindow.Game.State = self.State.LOADING
                 self.game_ui: MainMenuScreen = MainMenuScreen(self.parent)
-                self.state: self.State = self.State.MAIN_MENU
+                self.state: GameWindow.Game.State = self.State.MAIN_MENU
                 self.parent.setCentralWidget(self.game_ui)
 
         def run(self) -> None:
             """Create the window and initializes all of the game componenets."""
             assert self.state == self.State.PRE_LAUNCH
             self.game_ui: MainMenuScreen = MainMenuScreen(self.parent)
-            self.state: self.State = self.State.MAIN_MENU
+            self.state: GameWindow.Game.State = self.State.MAIN_MENU
             self.parent.setCentralWidget(self.game_ui)
 
         def save(self) -> None:
             """Any actions to preserve game state would want to run here."""
             if self.state == self.State.GAME:
-                self.state: self.State = self.State.SAVING
+                self.state: GameWindow.Game.State = self.State.SAVING
                 current_datetime_string: str = str(datetime.now()).replace(" ", "_")
-                filename: "tuple[str, str]" = QFileDialog.getSaveFileName(self.parent, "Save File",
+                filename: Tuple[str, str] = QFileDialog.getSaveFileName(self.parent, "Save File",
                     f"chess_game_{current_datetime_string}")
                 if filename[0] != "":
                     with open(filename[0], "wt", encoding="utf-8") as save_file:
                         save_file.write("")
-                self.state: self.State = self.State.GAME
+                self.state: GameWindow.Game.State = self.State.GAME
 
     def __init__(self) -> None:
         super().__init__()
@@ -196,7 +197,7 @@ class GameWindow(QMainWindow):
         end_game_message: QMessageBox = QMessageBox()
         end_game_message.setWindowTitle("Game Over")
         end_game_message.setText(self.game.get_end_of_game_message())
-        end_game_decisions: "dict[QPushButton, Callable]" = {}
+        end_game_decisions: Dict[QPushButton, Callable] = {}
         for button_text, func in\
             (("New Game", self.game.new_game), ("Main Menu", self.game.reset)):
             end_game_decisions[end_game_message.addButton(button_text,
