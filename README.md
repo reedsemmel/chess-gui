@@ -10,12 +10,11 @@ it has an intuitive GUI for ease of play.
 ### How to use
 
 Download the repository. Install Python 3 if you do not have it. You will also
-need to install the `PyQt5` and `numpy` packages. You can install them will the following
-commands:
+need to install the `PyQt5` package. You can install it with the following
+command:
 
 ```bash
 pip install --user PyQt5
-pip install --user numpy
 ```
 
 Note that depending on your system, the command may be `pip` or `pip3` for
