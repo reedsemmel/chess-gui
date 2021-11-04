@@ -12,26 +12,26 @@ Description:
     for chess.
 """
 
-from typing import Tuple, Union
-import numpy
-from utils import Piece, Coordinates
+from typing import Union
+from board import Board
+from utils import Piece, Coordinates, Player
 
 
 class FEN:
     """
     Class to hold and interpret a FEN code
 
-    valid: Tuple[bool, bool] first is used to check if the FEN code is valid
+    valid: tuple[bool, bool] first is used to check if the FEN code is valid
                              the second is used to check if the board is valid
                              and can be printed
 
     The later fields are only valid if valid[0] is True
 
-    rows: tuple[str, ...] the rows of the chess board, can index using [0-7][0-7]
-    turns: str the color to go next
+    board: Board the chess board, indexed by Coordinates
+    turns: Player the player to go next
     castling: str the castling rights
     en_passant: str the en passant square
-    half_and_full_move_clock: Tuple[int, int] the half move and full move clock
+    half_and_full_move_clock: tuple[int, int] the half move and full move clock
     str(FEN): str returns the FEN code
 
     a board is considered valid if the analysis board button is
@@ -60,32 +60,35 @@ class FEN:
                     len(fields[3]) == 2 and fields[3][1] not in "12345678" or
                     not fields[4].isdigit() or not fields[5].isdigit())
 
-    def __check_board(self, fields: "list[str]", rows: "list[list[Piece]]") -> bool:
+    @staticmethod
+    def __check_board(board: Board) -> bool:
         """Chess piece checks"""
 
         # Each side can only have 1 king
-        if fields[0].count("k") != 1 or fields[0].count("K") != 1:
+        if len(list(board.yield_king(Player.P1)) + list(board.yield_king(Player.P2))) != 2:
             return False
 
         # Pawn on row 0 or 7 check
-        if any(i in rows[0] + rows[7] for i in [Piece.BP, Piece.WP]):
-            return False
+        for i in (0, 7):
+            for j in range(8):
+                if board[Coordinates(j, i)] in (Piece.BP, Piece.WP):
+                    return False
 
         # Opposing kings can't be next to nor diagonal from each other
-        index: int = [x for row in rows for x in row].index(Piece.BK)
-        if Piece.WK in self[Piece.get_valid_king_moves(Coordinates(int(index / 8), index % 8))]:
-            return False
+        for coord in Piece.get_valid_king_moves(board.find_king(Player.P1)):
+            if Piece.BK == board[coord]:
+                return False
         return True
 
     def __init__(self, fen: str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         """Initalize and verify a FEN, default fen is the default chess board"""
 
-        self.valid: "Tuple[bool, bool]" = (False, False)
-        self.rows: numpy.ndarray = numpy.zeros((8, 8), dtype=Piece)
-        self.turns: str = ""
+        self.valid: "tuple[bool, bool]" = (False, False)
+        self.board: Board = Board.new_empty_board()
+        self.turns: Player = Player.P1
         self.castling: str = ""
         self.en_passant: str = ""
-        self.half_and_full_move_clock: "Tuple[int, int]" = (0, 0)
+        self.half_and_full_move_clock: "tuple[int, int]" = (0, 0)
 
         # Fen code as we received it if we need to print an error
         self.__fen: str = fen
@@ -97,56 +100,59 @@ class FEN:
             return
 
         rows: "list[list[Piece]]" = []
-        for row in fields[0].split("/"):
-            currrow: "list[Piece]" = []
+        for row in reversed(fields[0].split("/")):
+            curr_row: "list[Piece]" = []
             for char in row:
                 if char.isdigit():
-                    for _ in range(int(char)):
-                        currrow.append(Piece.NONE)
+                    curr_row += [Piece.NONE] * int(char)
                 elif char.lower() in "prbnqk":
-                    currrow.append(Piece.str_to_piece(char))
-            rows.insert(0, currrow)
+                    curr_row.append(Piece.str_to_piece(char))
+            rows.append(curr_row)
+
+        for rank, row in enumerate(rows):
+            for file, piece in enumerate(row):
+                self.board[Coordinates(file, rank)] = piece
 
         if FEN.__check_syntax(fields, rows) is False:
             return
 
-        self.valid: "Tuple[bool, bool]" = (False, True)
-        self.rows: numpy.ndarray = numpy.array(rows)
-        self.turns: str = fields[1]
+        self.valid: "tuple[bool, bool]" = (False, True)
+        self.turns: Player = Player.P1 if fields[1].lower() == "w" else Player.P2
         self.castling: str = fields[2]
         self.en_passant: str = fields[3]
-        self.half_and_full_move_clock: "Tuple[int, int]" = (
+        self.half_and_full_move_clock: "tuple[int, int]" = (
             int(fields[4]), int(fields[5]))
 
-        if self.__check_board(fields, rows) is False:
+        if FEN.__check_board(self.board) is False:
             return
 
-        self.valid: "Tuple[bool, bool]" = (True, True)
+        self.valid: "tuple[bool, bool]" = (True, True)
 
     def get_fen(self) -> str:
         """Get the FEN code"""
         if not self.valid[0]:
             return self.__fen
-        board: "list[str]" = []
+        board: str = ""
 
-        for row in list(reversed(self.rows)):
-            currow: str = ""
+        for rank in range(7, -1, -1):
             count: int = 0
-            for piece in row:
-                if piece is Piece.NONE:
+            for file in range(8):
+                piece: Piece = self.board[Coordinates(file, rank)]
+                if piece == Piece.NONE:
                     count += 1
                     continue
-                if count > 0:
-                    currow += str(count)
+                if count != 0:
+                    board += str(count)
                     count = 0
-                currow += str(piece)
-            if count > 0:
-                currow += str(count)
-            board.append(currow)
+                board += str(piece)
+            if count != 0:
+                board += str(count)
+            if rank != 0:
+                board += "/"
 
         return " ".join([
-            "/".join(board),
-            self.turns,
+            board,
+            "w" if self.turns == Player.P1 else "b",
             self.castling,
             self.en_passant,
             str(self.half_and_full_move_clock[0]),
@@ -156,81 +162,35 @@ class FEN:
     def __str__(self) -> str:
         return self.get_fen()
 
-    def __getitem__(self, key: "Union[str, int, Coordinates, list[Coordinates]]") -> Piece:
+    def __getitem__(self, key: Union[str, Coordinates]) -> Piece:
         """
-        Returns either the row or piece.
-        Can be indexed using 1-8 or a-h or using algebraic notation a8
+        Returns piece.
+        Can be indexed using Coordinates or a string of the form "a1"
         """
-        if isinstance(key, list):
-            return [self.__getitem__(x) for x in key]
+
         if isinstance(key, Coordinates):
-            return self.rows[key.file][key.rank]
-        if (isinstance(key, int) or key.isdigit()) and int(key) in range(8):
-            return self.rows[int(key)]
-        if len(key) == 1 and key[0].lower() in "abcdefg":
-            return self.rows[:, ord(key[0].lower()) - ord('a')]
-        if len(key) == 2 and key[0].lower() in "abcdefg" and int(key[1]) in range(8):
-            return self.__getitem__(key[0])[int(key[1])]
-        return ""
-
-    # TODO: this function
-    # Design: check if a fen code has a king in check
-    # Return: Tuple consisting of True if any king is in check and True if white is in check else False
-    @staticmethod
-    def is_in_check(fen) -> "Tuple[bool, bool]":
-        """Check if a the king is in check"""
-        return (False, False)
-
-    # TODO: this function
-    # Design: check if a fen code has a king in checkmate
-    # Return: Tuple consisting of True if any king is in checkmate with no valid moves
-    #         and True if white is in check else False
-    @staticmethod
-    def is_in_checkmate(fen) -> "Tuple[bool, bool]":
-        """Check if a king is in checkmate"""
-        index: int = [x for row in fen.rows for x in row].index(Piece.BK)
-        if fen.is_in_check(fen) and fen[Piece.get_valid_king_moves(Coordinates(int(index / 8), index % 8))] == []:
-            return (True, False)
-        return (False, False)
-
-    def get_valid_moves(self, coordinates: Coordinates) -> "list[Coordinates]":
-        """Get all valid moves for a piece, """
-        piece: Piece = self[coordinates]
-        if piece is Piece.NONE or self.is_in_checkmate(self):
-            return []
-        return Piece.return_valid_moves(piece, coordinates)
-
-    # TODO: add checks for check and mates and stuff
-    def make_move(self, old: Coordinates, new: Coordinates) -> bool:
-        """Tries to make a move if valid and returns true, else false if invalid"""
-        piece: Piece = self[old]
-        if False in self.valid or Piece.get(piece) is None or not old.is_valid() or not new.is_valid():
-            return False
-        if not self[old] == piece:
-            return False
-
-        # Check if the move is generally valid
-        if not new in self.get_valid_moves(old):
-            return False
-
-        return True
+            return self.board[key]
+        if isinstance(key, str) and len(key) == 2 and key[0].lower() in "abcdefg" \
+                and int(key[1]) in range(1, 9):
+            return self.board[Coordinates(key)]
+        return Piece.NONE
 
     def print_board(self) -> str:
         """Pretty print the board"""
-        ret: str = f"{str(self)}\nValid:{str(self.valid[0])}\n"
+        ret: str = f"{self}\nValid:{self.valid[0]}\n"
         if not self.valid[1]:
             return ret
-        for i in range(7, -1, -1):
-            for piece in self.rows[i]:
-                ret += f"│\033[4m{str(piece)}\033[0m"
+        for rank in range(7, -1, -1):
+            for file in range(8):
+                ret += f"│\033[4m{self.board[Coordinates(file, rank)]}\033[0m"
             ret += "│\n"
-        ret += f"{'W' if self.turns == 'w' else 'B'} to go\n"
+        ret += f"{'W' if self.turns == Player.P1 else 'B'} to go\n"
         if self.castling != "-":
             ret += f"Castling: {self.castling}\n"
         if self.en_passant != "-":
             ret += f"En passant: {self.en_passant}\n"
-        ret += f"Half move clock: {str(self.half_and_full_move_clock[0])}\n"
-        ret += f"Full move number: {str(self.half_and_full_move_clock[1])}\n"
+        ret += f"Half move clock: {self.half_and_full_move_clock[0]}\n"
+        ret += f"Full move number: {self.half_and_full_move_clock[1]}\n"
         return ret
 
 
@@ -286,7 +246,8 @@ if __name__ == "__main__":
             board: str = local_fen.print_board()
             self.assertTrue(local_fen.valid[0], board)
             self.assertEqual(
-                local_fen.get_fen(), "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", board)
+                local_fen.get_fen(), "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                board)
 
         def test_valid(self):
             """Test known valid FENs"""
@@ -312,17 +273,8 @@ if __name__ == "__main__":
             self.assertEqual(expected, actual, f'Expected: {expected}\n'
                              f'Actual: {actual}')
             expected = Piece.BR
-            actual = fen["a7"]
+            actual = fen["a8"]
             self.assertEqual(expected, actual, f'Expected: {expected}\n'
                              f'Actual: {actual}')
-            expected = fen["a"]
-            actual = numpy.array([Piece.WR, Piece.WP,
-                                  Piece.NONE, Piece.NONE, Piece.NONE, Piece.NONE, Piece.BP, Piece.BR])
-            self.assertTrue(numpy.array_equal(expected, actual), f'Expected: {expected}\n'
-                            f'Actual: {actual}')
-            expected = fen["7"]
-            actual = numpy.array([Piece.BR, Piece.BN,
-                                  Piece.BB, Piece.BQ, Piece.BK, Piece.BB, Piece.BN, Piece.BR])
-            self.assertTrue(numpy.array_equal(expected, actual), f'Expected: {expected}\n'
-                            f'Actual: {actual}')
+
     unittest.main()

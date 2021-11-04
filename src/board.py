@@ -86,6 +86,15 @@ class Board:
         # shouldn't be possible.
         assert False
 
+    def yield_king(self, player: Player) -> Coordinates:
+        """Yields all the coordinates of the players king"""
+        king_piece = Piece.WK if player == Player.P1 else Piece.BK
+        for file in range(8):
+            for rank in range(8):
+                coord = Coordinates(file, rank)
+                if self[coord] == king_piece:
+                    yield coord
+
     def generate_knight_moves(self, coords: Coordinates, player: Player) -> "list[Coordinates]":
         """Generates all the moves a knight can perform"""
         assert coords.is_valid() and self[coords].is_knight(
@@ -298,13 +307,15 @@ class Board:
                     return True
             return False
 
-        if __check_knights(king_pos, player) or __check_queens(king_pos, player) or \
-            __check_rooks(king_pos, player) or __check_bishops(king_pos, player) or \
-                __check_pawns(king_pos, player) or __check_king(king_pos, player):
-            return True
-
-        # The king lives another day
-        return False
+        # The king lives another day if the following returns false
+        return any([
+            __check_knights(king_pos, player),
+            __check_queens(king_pos, player),
+            __check_rooks(king_pos, player),
+            __check_bishops(king_pos, player),
+            __check_pawns(king_pos, player),
+            __check_king(king_pos, player)
+        ])
 
     def move(self, from_coords: Coordinates, to_coords: Coordinates, player: Player) -> None:
         """Moves a piece from one location to another"""
