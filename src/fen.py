@@ -13,8 +13,8 @@ Description:
 """
 
 from typing import Union
-import numpy
-from utils import Piece, Coordinates
+from board import Board
+from utils import Piece, Coordinates, Player
 
 
 class FEN:
@@ -27,7 +27,7 @@ class FEN:
 
     The later fields are only valid if valid[0] is True
 
-    rows: tuple[str, ...] the rows of the chess board, can index using [0-7][0-7]
+    board: Board the chess board, indexed by Coordinates
     turns: bool the color to go next, 0 for white, 1 for black
     castling: str the castling rights
     en_passant: str the en passant square
@@ -61,30 +61,30 @@ class FEN:
                     not fields[4].isdigit() or not fields[5].isdigit())
 
     @staticmethod
-    def __check_board(fen: "FEN", rows: "list[list[Piece]]") -> bool:
+    def __check_board(board: Board) -> bool:
         """Chess piece checks"""
 
-        list_of_pieces: "list[Piece]" = [x for row in rows for x in row]
-
         # Each side can only have 1 king
-        if list_of_pieces.count(Piece.BK) != 1 or list_of_pieces.count(Piece.WK) != 1:
+        if len(list(board.yield_king(Player.P1)) + list(board.yield_king(Player.P2))) != 2:
             return False
 
         # Pawn on row 0 or 7 check
-        if any(i in rows[0] + rows[7] for i in [Piece.BP, Piece.WP]):
-            return False
+        for i in (0, 7):
+            for j in range(8):
+                if board[Coordinates(j, i)] in (Piece.BP, Piece.WP):
+                    return False
 
         # Opposing kings can't be next to nor diagonal from each other
-        index: int = list_of_pieces.index(Piece.BK)
-        if Piece.WK in fen[Piece.get_valid_king_moves(Coordinates(int(index / 8), index % 8))]:
-            return False
+        for coord in Piece.get_valid_king_moves(board.find_king(Player.P1)):
+            if Piece.BK == board[coord]:
+                return False
         return True
 
     def __init__(self, fen: str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         """Initalize and verify a FEN, default fen is the default chess board"""
 
         self.valid: "tuple[bool, bool]" = (False, False)
-        self.rows: numpy.ndarray = numpy.zeros((8, 8), dtype=Piece)
+        self.board: Board = Board.new_empty_board()
         self.turns: bool = 0
         self.castling: str = ""
         self.en_passant: str = ""
@@ -109,18 +109,21 @@ class FEN:
                     currrow.append(Piece.str_to_piece(char))
             rows.append(currrow)
 
+        for rank, row in enumerate(rows):
+            for file, piece in enumerate(row):
+                self.board[Coordinates(file, rank)] = piece
+
         if FEN.__check_syntax(fields, rows) is False:
             return
 
         self.valid: "tuple[bool, bool]" = (False, True)
-        self.rows: numpy.ndarray = numpy.array(rows)
         self.turns: bool = fields[1].lower() == "b"
         self.castling: str = fields[2]
         self.en_passant: str = fields[3]
         self.half_and_full_move_clock: "tuple[int, int]" = (
             int(fields[4]), int(fields[5]))
 
-        if FEN.__check_board(self, rows) is False:
+        if FEN.__check_board(self.board) is False:
             return
 
         self.valid: "tuple[bool, bool]" = (True, True)
@@ -129,25 +132,26 @@ class FEN:
         """Get the FEN code"""
         if not self.valid[0]:
             return self.__fen
-        board: "list[str]" = []
+        board: str = ""
 
-        for row in list(reversed(self.rows)):
-            currow: str = ""
+        for rank in range(7, -1, -1):
             count: int = 0
-            for piece in row:
-                if piece is Piece.NONE:
+            for file in range(8):
+                piece: Piece = self.board[Coordinates(file, rank)]
+                if piece == Piece.NONE:
                     count += 1
                     continue
-                if count > 0:
-                    currow += str(count)
+                if count != 0:
+                    board += str(count)
                     count = 0
-                currow += str(piece)
-            if count > 0:
-                currow += str(count)
-            board.append(currow)
+                board += str(piece)
+            if count != 0:
+                board += str(count)
+            if rank != 0:
+                board += "/"
 
         return " ".join([
-            "/".join(board),
+            board,
             "b" if self.turns else "w",
             self.castling,
             self.en_passant,
@@ -158,39 +162,35 @@ class FEN:
     def __str__(self) -> str:
         return self.get_fen()
 
-    def __getitem__(self, key: Union[str, int, Coordinates, "list[Coordinates]"]) -> Piece:
+    def __getitem__(self, key: Union[str, Coordinates]) -> Piece:
         """
-        Returns either the row or piece.
-        Can be indexed using 1-8 or a-h or using algebraic notation a8
+        Returns piece.
+        Can be indexed using Coordinates or a string of the form "a1"
         """
-        if isinstance(key, list):
-            return [self.__getitem__(x) for x in key]
+
         if isinstance(key, Coordinates):
-            return self.rows[key.file][key.rank]
-        if (isinstance(key, int) or key.isdigit()) and int(key) in range(8):
-            return self.rows[int(key)]
-        if len(key) == 1 and key[0].lower() in "abcdefg":
-            return self.rows[:, ord(key[0].lower()) - ord('a')]
-        if len(key) == 2 and key[0].lower() in "abcdefg" and int(key[1]) in range(8):
-            return self.__getitem__(key[0])[int(key[1])]
-        return ""
+            return self.board[key]
+        if isinstance(key, str) and len(key) == 2 and key[0].lower() in "abcdefg" \
+                and int(key[1]) in range(1, 9):
+            return self.board[Coordinates(key)]
+        return Piece.NONE
 
     def print_board(self) -> str:
         """Pretty print the board"""
-        ret: str = f"{str(self)}\nValid:{str(self.valid[0])}\n"
+        ret: str = f"{self}\nValid:{self.valid[0]}\n"
         if not self.valid[1]:
             return ret
-        for i in range(7, -1, -1):
-            for piece in self.rows[i]:
-                ret += f"│\033[4m{str(piece)}\033[0m"
+        for rank in range(7, -1, -1):
+            for file in range(8):
+                ret += f"│\033[4m{self.board[Coordinates(file, rank)]}\033[0m"
             ret += "│\n"
         ret += f"{'B' if self.turns else 'W'} to go\n"
         if self.castling != "-":
             ret += f"Castling: {self.castling}\n"
         if self.en_passant != "-":
             ret += f"En passant: {self.en_passant}\n"
-        ret += f"Half move clock: {str(self.half_and_full_move_clock[0])}\n"
-        ret += f"Full move number: {str(self.half_and_full_move_clock[1])}\n"
+        ret += f"Half move clock: {self.half_and_full_move_clock[0]}\n"
+        ret += f"Full move number: {self.half_and_full_move_clock[1]}\n"
         return ret
 
 
@@ -273,19 +273,8 @@ if __name__ == "__main__":
             self.assertEqual(expected, actual, f'Expected: {expected}\n'
                              f'Actual: {actual}')
             expected = Piece.BR
-            actual = fen["a7"]
+            actual = fen["a8"]
             self.assertEqual(expected, actual, f'Expected: {expected}\n'
                              f'Actual: {actual}')
-            expected = fen["a"]
-            actual = numpy.array([Piece.WR, Piece.WP,
-                                  Piece.NONE, Piece.NONE,
-                                  Piece.NONE, Piece.NONE,
-                                  Piece.BP, Piece.BR])
-            self.assertTrue(numpy.array_equal(expected, actual), f'Expected: {expected}\n'
-                            f'Actual: {actual}')
-            expected = fen["7"]
-            actual = numpy.array([Piece.BR, Piece.BN,
-                                  Piece.BB, Piece.BQ, Piece.BK, Piece.BB, Piece.BN, Piece.BR])
-            self.assertTrue(numpy.array_equal(expected, actual), f'Expected: {expected}\n'
-                            f'Actual: {actual}')
+
     unittest.main()
