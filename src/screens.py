@@ -10,8 +10,8 @@ Description:
 """
 
 from typing import Callable, Optional
-from PyQt5.QtCore import QRegExp, Qt
-from PyQt5.QtGui import QRegExpValidator, QResizeEvent
+from PyQt5.QtCore import QRegExp, QSize, Qt
+from PyQt5.QtGui import QFont, QRegExpValidator, QResizeEvent
 from PyQt5.QtWidgets import QFormLayout, QGridLayout, QHBoxLayout, QLabel
 from PyQt5.QtWidgets import QLineEdit, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 from chess import Chess
@@ -89,13 +89,15 @@ class GameScreen(QWidget):
 
         # Add Instance Variables
         self.board: InteractiveBoard = InteractiveBoard(chess, settings)
-        self.settings: Settings = settings
+        self.original_size: QSize = None
+        self.resizables: tuple = ()
 
         # Set Layout
         self.layout: QGridLayout = QGridLayout(self)
 
         # Back Button
         back_button: QPushButton = make_button("Back", self.parent().abandon_game_event, self)
+        back_button.setStyleSheet("padding: 3px 24px;")
         self.layout.addWidget(back_button, 0, 0, 2, 1, Qt.AlignTop | Qt.AlignLeft)
 
         # Add Board
@@ -105,12 +107,29 @@ class GameScreen(QWidget):
         self.layout.setColumnStretch(1, 1)
 
         # Add Player Names
-        opponent_name: QLabel = QLabel(self.settings.opponent_name)
+        opponent_name: QLabel = QLabel(settings.opponent_name)
         opponent_name.setContentsMargins(10, 10, 10, 10)
         self.layout.addWidget(opponent_name, 0, 2, Qt.AlignTop | Qt.AlignHCenter)
-        player_name: QLabel = QLabel(self.settings.player_name)
+        player_name: QLabel = QLabel(settings.player_name)
         player_name.setContentsMargins(10, 10, 10, 10)
         self.layout.addWidget(player_name, 1, 2, Qt.AlignBottom | Qt.AlignHCenter)
+
+        # Configure Resizable Elements
+        self.resizables = (back_button, opponent_name, player_name)
+
+    def resizeEvent(self, a0: QResizeEvent) -> None: # pylint: disable=invalid-name
+        """Controls resizing to scale text."""
+        if self.original_size is None:
+            self.original_size: QSize = a0.size()
+        ratios: tuple = (a0.size().height() / self.original_size.height(),
+            a0.size().width() / self.original_size.width())
+        scale: float = max(ratios) if any(ratio < 1 for ratio in ratios) else min(ratios)
+        if scale > 0:
+            size: int = max(9, round(scale * 9))
+            font: QFont = QFont("Sans Serif", size)
+            for widget in self.resizables:
+                widget.setFont(font)
+        return super().resizeEvent(a0)
 
 class SettingsScreen(QWidget):
     """Screen that houses elements that allow user to change allowed settings."""
