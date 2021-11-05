@@ -26,37 +26,6 @@ def make_button(content: str, func: Callable, parent: Optional[QWidget] = None) 
     button.setObjectName("resizable")
     return button
 
-class MainMenuScreen(QWidget):
-    """Screen that houses main menu elements like the title, play button, etc."""
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
-        self._set_layout()
-        self._add_elements()
-
-    def _add_buttons(self) -> None:
-        """Adds various buttons to the layout."""
-        buttons: QVBoxLayout = QVBoxLayout()
-        buttons.addWidget(make_button("Play", self.parent().play_event, self))
-        buttons.addWidget(make_button("Load", self.parent().load_event, self))
-        buttons.addWidget(make_button("Settings", self.parent().open_settings_event, self))
-        buttons.addWidget(make_button("Quit", self.parent().close, self))
-        self.layout.addLayout(buttons, 1, 0, Qt.AlignHCenter | Qt.AlignTop)
-
-    def _add_elements(self) -> None:
-        """Adds all the elements unique to this screen to the layout."""
-        assert isinstance(self.layout, QGridLayout)
-        self._add_title()
-        self._add_buttons()
-
-    def _add_title(self) -> None:
-        """Adds title to the layout."""
-        self.layout.addWidget(QLabel("<h1>CHESS</h1>"), 0, 0, Qt.AlignTop | Qt.AlignHCenter)
-
-    def _set_layout(self) -> None:
-        """Sets the widget's layout."""
-        self.layout: QGridLayout = QGridLayout(self)
-        self.setLayout(self.layout)
-
 class Screen(QWidget):
     """Screen that allows for resizing text and button text."""
 
@@ -89,6 +58,24 @@ class Screen(QWidget):
         if self.current_font_size != size:
             self.setStyleSheet(style)
             self.current_font_size: int = size
+
+class MainMenuScreen(Screen):
+    """Screen that houses main menu elements like the title, play button, etc."""
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
+        super().__init__(parent)
+
+        # Set Layout
+        self.layout: QGridLayout = QGridLayout(self)
+
+        # Add Title
+        self.layout.addWidget(QLabel("<h1>CHESS</h1>"), 0, 0, Qt.AlignTop | Qt.AlignHCenter)
+
+        # Add Buttons
+        buttons: QVBoxLayout = QVBoxLayout()
+        for name, func in (("Play", self.parent().play_event), ("Load", self.parent().load_event),
+            ("Settings", self.parent().open_settings_event), ("Quit", self.parent().close)):
+            buttons.addWidget(make_button(name, func, self))
+        self.layout.addLayout(buttons, 1, 0, Qt.AlignHCenter | Qt.AlignTop)
 
 class GameScreen(Screen):
     """Screen that houses the actual game elements like the chessboard and other features."""
