@@ -43,6 +43,11 @@ class ChessState:
         self.available_moves = self.board.prune_illegal_moves(self.available_moves,
             self.current_turn)
 
+        # Castling
+        king_pos = self.board.find_king(self.current_turn)
+        for move in self.board.generate_legal_castle_moves(self.current_turn):
+            self.available_moves.append((king_pos, move))
+
 class Chess:
     """Chess class to hold the internal state of the chess board"""
 
