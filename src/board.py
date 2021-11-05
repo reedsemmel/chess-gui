@@ -234,60 +234,58 @@ class Board:
         assert player in (Player.P1, Player.P2)
         valid_moves = []
 
+        def __test_coords_empty(self: Board, coords: "tuple[Coordinates, Coordinates]") -> bool:
+            """Tests if the coordinates are empty"""
+            return all(self[y] == Piece.NONE for y in coords)
+
         if player == Player.P1:
-            # King side
-            if self._castle_white_king:
-                # Tiles between must be empty
-                if self[Coordinates(5, 0)] == Piece.NONE and self[Coordinates(6, 0)] == Piece.NONE:
-                    # Rook and king placement are already correct because of _castle_white_king
-                    # The king must not be in check for any step along the way
-                    for king_pos in (Coordinates(4, 0), Coordinates(5, 0), Coordinates(6, 0)):
-                        copy = deepcopy(self)
-                        copy[Coordinates(4, 0)] = Piece.NONE
-                        copy[king_pos] = Piece.WK
-                        if copy.is_in_check(player):
-                            break
-                    else:
-                        valid_moves.append(Coordinates(6, 0))
-            # Queen side
-            if self._castle_white_queen:
-                # Tiles between must be empty
-                if self[Coordinates(3, 0)] == Piece.NONE and self[Coordinates(2, 0)] == Piece.NONE and \
-                        self[Coordinates(1, 0)] == Piece.NONE:
-                    # Rook and king placement are already correct because of _castle_white_queen
-                    for king_pos in (Coordinates(4, 0), Coordinates(3, 0), Coordinates(2, 0)):
-                        copy = deepcopy(self)
-                        copy[Coordinates(4, 0)] = Piece.NONE
-                        copy[king_pos] = Piece.WK
-                        if copy.is_in_check(player):
-                            break
-                    else:
-                        valid_moves.append(Coordinates(2, 0))
+            # King side and Tiles between must be empty
+            if self._castle_white_king and __test_coords_empty(self, (Coordinates(5, 0), Coordinates(6, 0))):
+                # Rook and king placement are already correct because of _castle_white_king
+                # The king must not be in check for any step along the way
+                for king_pos in (Coordinates(4, 0), Coordinates(5, 0), Coordinates(6, 0)):
+                    copy = deepcopy(self)
+                    copy[Coordinates(4, 0)] = Piece.NONE
+                    copy[king_pos] = Piece.WK
+                    if copy.is_in_check(player):
+                        break
+                else:
+                    valid_moves.append(Coordinates(6, 0))
+            # Queen side and Tiles between must be empty
+            if self._castle_white_queen and \
+                    __test_coords_empty(self, (Coordinates(3, 0), Coordinates(2, 0), Coordinates(1, 0))):
+                # Rook and king placement are already correct because of _castle_white_queen
+                for queen_pos in (Coordinates(4, 0), Coordinates(3, 0), Coordinates(2, 0)):
+                    copy = deepcopy(self)
+                    copy[Coordinates(4, 0)] = Piece.NONE
+                    copy[queen_pos] = Piece.WK
+                    if copy.is_in_check(player):
+                        break
+                else:
+                    valid_moves.append(Coordinates(2, 0))
             return valid_moves
-        else:
-            # King side
-            if self._castle_black_king:
-                if self[Coordinates(5, 7)] == Piece.NONE and self[Coordinates(6, 7)] == Piece.NONE:
-                    for king_pos in (Coordinates(4, 7), Coordinates(5, 7), Coordinates(6, 7)):
-                        copy = deepcopy(self)
-                        copy[Coordinates(4, 7)] = Piece.NONE
-                        copy[king_pos] = Piece.BK
-                        if copy.is_in_check(player):
-                            break
-                    else:
-                        valid_moves.append(Coordinates(6, 7))
-            # Queen side
-            if self._castle_black_queen:
-                if self[Coordinates(3, 7)] == Piece.NONE and self[Coordinates(2, 7)] == Piece.NONE and \
-                        self[Coordinates(1, 7)] == Piece.NONE:
-                    for king_pos in (Coordinates(4, 7), Coordinates(3, 7), Coordinates(2, 7)):
-                        copy = deepcopy(self)
-                        copy[Coordinates(4, 7)] = Piece.NONE
-                        copy[king_pos] = Piece.BK
-                        if copy.is_in_check(player):
-                            break
-                    else:
-                        valid_moves.append(Coordinates(2, 7))
+
+        # King side
+        if self._castle_black_king and __test_coords_empty(self, (Coordinates(5, 7), Coordinates(6, 7))):
+            for king_pos in (Coordinates(4, 7), Coordinates(5, 7), Coordinates(6, 7)):
+                copy = deepcopy(self)
+                copy[Coordinates(4, 7)] = Piece.NONE
+                copy[king_pos] = Piece.BK
+                if copy.is_in_check(player):
+                    break
+            else:
+                valid_moves.append(Coordinates(6, 7))
+        # Queen side
+        if self._castle_black_queen and \
+                __test_coords_empty(self, (Coordinates(3, 7), Coordinates(2, 7), Coordinates(1, 7))):
+            for queen_pos in (Coordinates(4, 7), Coordinates(3, 7), Coordinates(2, 7)):
+                copy = deepcopy(self)
+                copy[Coordinates(4, 7)] = Piece.NONE
+                copy[queen_pos] = Piece.BK
+                if copy.is_in_check(player):
+                    break
+            else:
+                valid_moves.append(Coordinates(2, 7))
 
         return valid_moves
 
