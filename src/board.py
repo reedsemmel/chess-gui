@@ -221,8 +221,8 @@ class Board:
             if capture_coords.is_valid() and self[capture_coords].is_opponent(player):
                 valid_moves.append(capture_coords)
             if capture_coords.is_valid() and self._en_passant_files[capture_coords.file]:
-                if self[capture_coords] == Piece.NONE and (player == Player.P1 and  \
-                    coords.rank == 4 or player == Player.P2 and coords.rank == 3):
+                if self[capture_coords] == Piece.NONE and (player == Player.P1 and
+                                                           coords.rank == 4 or player == Player.P2 and coords.rank == 3):
                     valid_moves.append(capture_coords)
 
         return sorted(valid_moves)
@@ -253,7 +253,7 @@ class Board:
             if self._castle_white_queen:
                 # Tiles between must be empty
                 if self[Coordinates(3, 0)] == Piece.NONE and self[Coordinates(2, 0)] == Piece.NONE and \
-                    self[Coordinates(1, 0)] == Piece.NONE:
+                        self[Coordinates(1, 0)] == Piece.NONE:
                     # Rook and king placement are already correct because of _castle_white_queen
                     for king_pos in (Coordinates(4, 0), Coordinates(3, 0), Coordinates(2, 0)):
                         copy = deepcopy(self)
@@ -279,7 +279,7 @@ class Board:
             # Queen side
             if self._castle_black_queen:
                 if self[Coordinates(3, 7)] == Piece.NONE and self[Coordinates(2, 7)] == Piece.NONE and \
-                    self[Coordinates(1, 7)] == Piece.NONE:
+                        self[Coordinates(1, 7)] == Piece.NONE:
                     for king_pos in (Coordinates(4, 7), Coordinates(3, 7), Coordinates(2, 7)):
                         copy = deepcopy(self)
                         copy[Coordinates(4, 7)] = Piece.NONE
@@ -290,7 +290,6 @@ class Board:
                         valid_moves.append(Coordinates(2, 7))
 
         return valid_moves
-
 
     def generate_moves(self, coords: Coordinates, player: Player) -> "list[Coordinates]":
         """Wrapper to tie each piece function together"""
@@ -405,11 +404,13 @@ class Board:
         # Handle moving the rooks if this is a castle move
         if self[to_coords].is_king() and to_coords.file - from_coords.file == 2:
             self[Coordinates(7, 0 if player == Player.P1 else 7)] = Piece.NONE
-            self[Coordinates(5, 0 if player == Player.P1 else 7)] = Piece.WR if player == Player.P1 else Piece.BR
+            self[Coordinates(5, 0 if player == Player.P1 else 7)
+                 ] = Piece.WR if player == Player.P1 else Piece.BR
 
         if self[to_coords].is_king() and to_coords.file - from_coords.file == -2:
             self[Coordinates(0, 0 if player == Player.P1 else 7)] = Piece.NONE
-            self[Coordinates(3, 0 if player == Player.P1 else 7)] = Piece.WR if player == Player.P1 else Piece.BR
+            self[Coordinates(3, 0 if player == Player.P1 else 7)
+                 ] = Piece.WR if player == Player.P1 else Piece.BR
 
         # If we performed en passant, we need to remove the pawn
         if self[to_coords].is_pawn() and abs(to_coords.file - from_coords.file) == 1:
