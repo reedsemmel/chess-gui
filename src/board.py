@@ -254,6 +254,7 @@ class Board:
                             break
                     else:
                         valid_moves.append(Coordinates(2, 0))
+            return valid_moves
         else:
             # King side
             if self._castle_black_king:
