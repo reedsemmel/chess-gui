@@ -32,12 +32,11 @@ class Board:
     )
 
     def __init__(self):
-        self._grid: "list[list[Piece]]" = [
-            [Piece.NONE for _ in range(8)] for _ in range(8)]
+        self._grid: "list[list[Piece]]" = [[Piece.NONE] * 8 for _ in range(8)]
         # This variable is used to tell which pawn is able to be en passant'ed. It should have
         # one of the elements be modified if a pawn moves up two places, and all reset to False
         # after each turn.
-        self._en_passant_files: "list[bool]" = [False for _ in range(8)]
+        self._en_passant_files: "list[bool]" = [False] * 8
         # 4 possible castling moves that are possible at the start of the game
         self._castle_white_king: bool = True
         self._castle_white_queen: bool = True
@@ -419,7 +418,7 @@ class Board:
                              to_coords.rank)] = Piece.NONE
 
         # Clear en passant flags
-        self._en_passant_files = [False for _ in range(8)]
+        self._en_passant_files = [False] * 8
 
         # If we move a pawn up two spaces we need to set its en_passant flag
         if abs(to_coords.rank - from_coords.rank) == 2 and self[to_coords].is_pawn():
