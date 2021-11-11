@@ -221,8 +221,8 @@ class Board:
             if capture_coords.is_valid() and self[capture_coords].is_opponent(player):
                 valid_moves.append(capture_coords)
             if capture_coords.is_valid() and self._en_passant_files[capture_coords.file]:
-                if self[capture_coords] == Piece.NONE and (player == Player.P1 and
-                                                           coords.rank == 4 or player == Player.P2 and coords.rank == 3):
+                if self[capture_coords] == Piece.NONE and player == Player.P1 and (
+                        coords.rank == 4 or player == Player.P2 and coords.rank == 3):
                     valid_moves.append(capture_coords)
 
         return sorted(valid_moves)
@@ -235,12 +235,13 @@ class Board:
         valid_moves = []
 
         def __test_coords_empty(self: Board, coords: "tuple[Coordinates, Coordinates]") -> bool:
-            """Tests if the coordinates are empty"""
-            return all(self[y] == Piece.NONE for y in coords)
+            """Tests if the coordinates are all empty"""
+            return all(not self[y] for y in coords)
 
         if player == Player.P1:
             # King side and Tiles between must be empty
-            if self._castle_white_king and __test_coords_empty(self, (Coordinates(5, 0), Coordinates(6, 0))):
+            if self._castle_white_king and \
+                    __test_coords_empty(self, (Coordinates(5, 0), Coordinates(6, 0))):
                 # Rook and king placement are already correct because of _castle_white_king
                 # The king must not be in check for any step along the way
                 for king_pos in (Coordinates(4, 0), Coordinates(5, 0), Coordinates(6, 0)):
@@ -253,7 +254,8 @@ class Board:
                     valid_moves.append(Coordinates(6, 0))
             # Queen side and Tiles between must be empty
             if self._castle_white_queen and \
-                    __test_coords_empty(self, (Coordinates(3, 0), Coordinates(2, 0), Coordinates(1, 0))):
+                    __test_coords_empty(self, (
+                        Coordinates(3, 0), Coordinates(2, 0), Coordinates(1, 0))):
                 # Rook and king placement are already correct because of _castle_white_queen
                 for queen_pos in (Coordinates(4, 0), Coordinates(3, 0), Coordinates(2, 0)):
                     copy = deepcopy(self)
@@ -266,7 +268,8 @@ class Board:
             return valid_moves
 
         # King side
-        if self._castle_black_king and __test_coords_empty(self, (Coordinates(5, 7), Coordinates(6, 7))):
+        if self._castle_black_king and \
+                __test_coords_empty(self, (Coordinates(5, 7), Coordinates(6, 7))):
             for king_pos in (Coordinates(4, 7), Coordinates(5, 7), Coordinates(6, 7)):
                 copy = deepcopy(self)
                 copy[Coordinates(4, 7)] = Piece.NONE
@@ -277,7 +280,8 @@ class Board:
                 valid_moves.append(Coordinates(6, 7))
         # Queen side
         if self._castle_black_queen and \
-                __test_coords_empty(self, (Coordinates(3, 7), Coordinates(2, 7), Coordinates(1, 7))):
+                __test_coords_empty(self, (
+                    Coordinates(3, 7), Coordinates(2, 7), Coordinates(1, 7))):
             for queen_pos in (Coordinates(4, 7), Coordinates(3, 7), Coordinates(2, 7)):
                 copy = deepcopy(self)
                 copy[Coordinates(4, 7)] = Piece.NONE
@@ -399,62 +403,54 @@ class Board:
         self[to_coords] = self[from_coords]
         self[from_coords] = Piece.NONE
 
-        # Handle moving the rooks if this is a castle move
-        if self[to_coords].is_king() and to_coords.file - from_coords.file == 2:
-            self[Coordinates(7, 0 if player == Player.P1 else 7)] = Piece.NONE
-            self[Coordinates(5, 0 if player == Player.P1 else 7)
-                 ] = Piece.WR if player == Player.P1 else Piece.BR
+        rank: int = 0 if player == Player.P1 else 7
+        file_diff: int = to_coords.file - from_coords.file
 
-        if self[to_coords].is_king() and to_coords.file - from_coords.file == -2:
-            self[Coordinates(0, 0 if player == Player.P1 else 7)] = Piece.NONE
-            self[Coordinates(3, 0 if player == Player.P1 else 7)
+        # Handle moving the rooks if this is a castle move
+        if abs(file_diff) == 2 and self[to_coords].is_king():
+            self[Coordinates(7 if file_diff == 2 else 0, rank)] = Piece.NONE
+            self[Coordinates(5 if file_diff == 2 else 3, rank)
                  ] = Piece.WR if player == Player.P1 else Piece.BR
 
         # If we performed en passant, we need to remove the pawn
-        if self[to_coords].is_pawn() and abs(to_coords.file - from_coords.file) == 1:
-            if self._en_passant_files[to_coords.file] and to_coords.rank == 2:
-                self[Coordinates(to_coords.file, 3)] = Piece.NONE
-            if self._en_passant_files[to_coords.file] and to_coords.rank == 5:
-                self[Coordinates(to_coords.file, 4)] = Piece.NONE
+        if to_coords.rank in (2, 5) and abs(file_diff) == 1 and \
+                self._en_passant_files[to_coords.file] and self[to_coords].is_pawn():
+            self[Coordinates(3 if to_coords.rank == 2 else 4,
+                             to_coords.rank)] = Piece.NONE
 
         # Clear en passant flags
         self._en_passant_files = [False for _ in range(8)]
 
         # If we move a pawn up two spaces we need to set its en_passant flag
-        if self[to_coords].is_pawn() and abs(to_coords.rank - from_coords.rank) == 2:
+        if abs(to_coords.rank - from_coords.rank) == 2 and self[to_coords].is_pawn():
             self._en_passant_files[to_coords.file] = True
+
+        # Moving the king will always revoke both castling rights
+        if self[to_coords].is_king():
+            if player == Player.P1:
+                self._castle_white_king, self._castle_white_queen = False, False
+            else:
+                self._castle_black_king, self._castle_black_queen = False, False
+            return
 
         # Revoke castling rights if they move the king or rook
         if player == Player.P1:
-            # Moving the king will always revoke both castling rights
-            if self[to_coords].is_king():
-                self._castle_white_king = False
-                self._castle_white_queen = False
             # Moving a piece from the corner of the board will revoke a castling right. It doesn't
             # matter if it isn't a rook, since we only have to revoke rights once then they are
             # gone for good.
-            if from_coords == Coordinates(0, 0):
-                self._castle_white_queen = False
-            if from_coords == Coordinates(7, 0):
-                self._castle_white_king = False
+            self._castle_white_queen = False if from_coords == "a1" else self._castle_white_queen
+            self._castle_white_king = False if from_coords == "h1" else self._castle_white_king
             # If we capture the opposing squares, we revoke the opponent's castling rights
-            if to_coords == Coordinates(0, 7):
-                self._castle_black_queen = False
-            if to_coords == Coordinates(7, 7):
-                self._castle_black_king = False
-        else:
-            # Same thing as above but flipped
-            if self[to_coords].is_king():
-                self._castle_black_king = False
-                self._castle_black_queen = False
-            if from_coords == Coordinates(0, 7):
-                self._castle_black_queen = False
-            if from_coords == Coordinates(7, 7):
-                self._castle_black_king = False
-            if to_coords == Coordinates(0, 0):
-                self._castle_white_queen = False
-            if to_coords == Coordinates(7, 0):
-                self._castle_white_king = False
+            self._castle_black_queen = False if to_coords == "a8" else self._castle_black_queen
+            self._castle_black_king = False if to_coords == "h8" else self._castle_black_king
+            return
+
+        # Same thing as above but flipped
+        self._castle_black_queen = False if from_coords == "a8" else self._castle_black_queen
+        self._castle_black_king = False if from_coords == "h8" else self._castle_black_king
+        # If we capture the opposing squares, we revoke the opponent's castling rights
+        self._castle_white_queen = False if to_coords == "a1" else self._castle_white_queen
+        self._castle_white_king = False if to_coords == "h1" else self._castle_white_king
 
     def prune_illegal_moves(self, moves: "list[tuple[Coordinates, Coordinates]]", player: Player):
         """Removes illegal moves from the list, which are moves that put yourself in check"""
