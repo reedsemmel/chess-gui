@@ -30,11 +30,11 @@ class InteractiveBoard(QWidget):
     will be off.
     """
 
-    def __init__(self, chess: Chess, settings: Settings) -> None:
+    def __init__(self, chess: Chess, settings: Settings, home_window: Optional[QWidget] = None) -> None:
         super().__init__()
         self.chess = chess
         self.selected: Coordinates = Coordinates(-1, -1)
-
+        self.home_window = home_window
 
         # Set up an 8 by 8 grid
         layout = QGridLayout(self)
@@ -99,6 +99,8 @@ class InteractiveBoard(QWidget):
                         self.tile_grid[file][rank].set_checked(False)
             self.chess.make_move(self.selected, coord, promotion_choice)
             self.redraw_whole_board(self.chess.get_grid())
+            if self.home_window is not None:
+                self.home_window.update_event()
 
         # If the king is in check, highlight it
         if self.chess.is_in_check():
