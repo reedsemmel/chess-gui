@@ -34,26 +34,41 @@ class InteractiveBoard(QWidget):
         super().__init__()
         self.chess = chess
         self.selected: Coordinates = Coordinates(-1, -1)
+        self.view_side: Player = Player.P1
 
 
         # Set up an 8 by 8 grid
-        layout = QGridLayout(self)
-        layout.setSpacing(0)
+        self.grid_layout = QGridLayout(self)
+        self.grid_layout.setSpacing(0)
 
         self.tile_grid = [[self.ChessTile(file, rank, settings) for rank in range(8)]
             for file in range(8)]
+
+        for file in range(8):
+            for rank in range(8):
+                self.draw_piece(self.chess.piece_at(Coordinates(file, rank)), file, rank)
+
+        self.set_view_side(Player.P1)
+
+        self.setLayout(self.grid_layout)
+
+    def set_view_side(self, player: Player) -> None:
+        self.view_side = player
         for file in range(8):
             for rank in range(8):
                 # Rank is the row, File is the column.
                 # Additionally, show the 1st rank on the bottom. (White's view)
                 # (Black's view would be (rank, 8 - file))
-                layout.addWidget(self.tile_grid[file][rank], 8 - rank, file)
-                # We also want to set the blank background so the CSS background
-                # colors properly show up.
-                self.tile_grid[file][rank].set_image(Piece.NONE)
+                if player == Player.P1:
+                    self.grid_layout.addWidget(self.tile_grid[file][rank], 8 - rank, file)
+                else:
+                    self.grid_layout.addWidget(self.tile_grid[file][rank], rank, 8 - file)
 
-        self.setLayout(layout)
-        self.redraw_whole_board(self.chess.get_state().board._grid)
+    def swap_view_side(self) -> None:
+        if self.view_side == Player.P1:
+            self.set_view_side(Player.P2)
+        else:
+            self.set_view_side(Player.P1)
 
     # Called by ChessTile widgets and passes their position to this function
     def handle_click(self, coord: Coordinates) -> None:
