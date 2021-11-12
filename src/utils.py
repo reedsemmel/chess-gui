@@ -337,6 +337,9 @@ class Piece(Enum):
         }
         return piece_to_str[self]
 
+    def __bool__(self):
+        return self != Piece.NONE
+
 
 @unique
 class Player(Enum):
