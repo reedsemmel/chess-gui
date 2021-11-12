@@ -110,6 +110,7 @@ class GameScreen(Screen):
 
         # Initialize Instance Variables
         self.board: InteractiveBoard = InteractiveBoard(chess, settings, parent)
+        self.initial_layout: bool = True
 
         # Set Layout
         self.layout: QGridLayout = QGridLayout(self)
@@ -125,12 +126,19 @@ class GameScreen(Screen):
         self.layout.setColumnStretch(1, 1)
 
         # Add Player Names
-        opponent_name: QLabel = QLabel(settings.opponent_name)
-        opponent_name.setContentsMargins(0, 10, 10, 10)
-        self.layout.addWidget(opponent_name, 0, 2, Qt.AlignTop | Qt.AlignHCenter)
-        player_name: QLabel = QLabel(settings.player_name)
-        player_name.setContentsMargins(0, 10, 10, 10)
-        self.layout.addWidget(player_name, 1, 2, Qt.AlignBottom | Qt.AlignHCenter)
+        self.opponent_name: QLabel = QLabel(settings.opponent_name)
+        self.opponent_name.setContentsMargins(0, 10, 10, 10)
+        self.layout.addWidget(self.opponent_name, 0, 2, Qt.AlignTop | Qt.AlignHCenter)
+        self.player_name: QLabel = QLabel(settings.player_name)
+        self.player_name.setContentsMargins(0, 10, 10, 10)
+        self.layout.addWidget(self.player_name, 1, 2, Qt.AlignBottom | Qt.AlignHCenter)
+
+    def swap_board(self) -> None:
+        """Updates the board."""
+        self.board.swap_view_side()
+        self.layout.addWidget(self.player_name if self.initial_layout else self.opponent_name, 0, 2, Qt.AlignTop | Qt.AlignHCenter)
+        self.layout.addWidget(self.opponent_name if self.initial_layout else self.player_name, 1, 2, Qt.AlignBottom | Qt.AlignHCenter)
+        self.initial_layout: bool = not self.initial_layout
 
 class SettingsScreen(Screen):
     """Screen that houses elements that allow user to change allowed settings."""
