@@ -109,7 +109,7 @@ class GameScreen(Screen):
         super().__init__(parent)
 
         # Initialize Instance Variables
-        self.board: InteractiveBoard = InteractiveBoard(chess, settings)
+        self.board: InteractiveBoard = InteractiveBoard(chess, settings, parent)
 
         # Set Layout
         self.layout: QGridLayout = QGridLayout(self)
