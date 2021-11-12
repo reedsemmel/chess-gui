@@ -151,6 +151,14 @@ class GameWindow(QMainWindow):
                         save_file.write("")
                 self.state: GameWindow.Game.State = self.State.GAME
 
+        def update(self, move_made: bool) -> None:
+            """Check for game end currently."""
+            if self.state == self.State.GAME:
+                if len(self.game_logic.state.available_moves) == 0:
+                    self.parent.end_event()
+                if move_made:
+                    self.game_ui.swap_board()
+
     def __init__(self) -> None:
         super().__init__()
         self._set_window_properties()
@@ -225,6 +233,10 @@ class GameWindow(QMainWindow):
         """Shows the window and runs the setup for the game."""
         self.game.run()
         super().show()
+
+    def update_event(self, move_made: bool) -> None:
+        """Triggers the update of the game."""
+        self.game.update(move_made)
 
     def _set_menu_bar(self) -> None:
         """Sets the properties of the menu bar such as File->Quit."""
