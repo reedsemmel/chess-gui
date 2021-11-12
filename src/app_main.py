@@ -152,7 +152,7 @@ class GameWindow(QMainWindow):
                 self.state: GameWindow.Game.State = self.State.GAME
 
         def update(self) -> None:
-            """Check for game end curretly."""
+            """Check for game end currently."""
             if self.state == self.State.GAME and len(self.game_logic.state.available_moves) == 0:
                 self.parent.end_event()
                 
