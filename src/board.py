@@ -431,10 +431,11 @@ class Board:
                  ] = Piece.WR if player == Player.P1 else Piece.BR
 
         # If we performed en passant, we need to remove the pawn
-        if to_coords.rank in (2, 5) and abs(file_diff) == 1 and \
-                self._en_passant_files[to_coords.file] and self[to_coords].is_pawn():
-            self[Coordinates(3 if to_coords.rank == 2 else 4,
-                             to_coords.rank)] = Piece.NONE
+        if self[to_coords].is_pawn() and abs(to_coords.file - from_coords.file) == 1:
+            if self._en_passant_files[to_coords.file] and to_coords.rank == 2:
+                self[Coordinates(to_coords.file, 3)] = Piece.NONE
+            if self._en_passant_files[to_coords.file] and to_coords.rank == 5:
+                self[Coordinates(to_coords.file, 4)] = Piece.NONE
 
         # Clear en passant flags
         self._en_passant_files = [False] * 8
@@ -642,9 +643,11 @@ if __name__ == "__main__":
             board.move(Coordinates("f1"), Coordinates("e2"), Player.P1)
             board.move(Coordinates("f8"), Coordinates("e7"), Player.P2)
             # Now both sides are able to castle king side.
-            self.assertTrue(Coordinates("g1") in board.generate_legal_castle_moves(Player.P1))
+            self.assertTrue(Coordinates(
+                "g1") in board.generate_legal_castle_moves(Player.P1))
             board.move(Coordinates("e1"), Coordinates("g1"), Player.P1)
-            self.assertTrue(Coordinates("g8") in board.generate_legal_castle_moves(Player.P2))
+            self.assertTrue(Coordinates(
+                "g8") in board.generate_legal_castle_moves(Player.P2))
 
         def test_basic_queen_side_castling(self):
             """Tests basic queen side castling for both sides"""
@@ -659,9 +662,11 @@ if __name__ == "__main__":
             board.move(Coordinates("b1"), Coordinates("a3"), Player.P1)
             board.move(Coordinates("b8"), Coordinates("a6"), Player.P2)
             # Now both sides are able to castle queen side.
-            self.assertTrue(Coordinates("c1") in board.generate_legal_castle_moves(Player.P1))
+            self.assertTrue(Coordinates(
+                "c1") in board.generate_legal_castle_moves(Player.P1))
             board.move(Coordinates("e1"), Coordinates("c1"), Player.P1)
-            self.assertTrue(Coordinates("c8") in board.generate_legal_castle_moves(Player.P2))
+            self.assertTrue(Coordinates(
+                "c8") in board.generate_legal_castle_moves(Player.P2))
 
         def test_castling_revoke_rook(self):
             """Tests moving a rook and moving it back to see if it properly revokes castling"""
@@ -676,17 +681,20 @@ if __name__ == "__main__":
             board.move(Coordinates("g1"), Coordinates("f3"), Player.P1)
             board.move(Coordinates("a6"), Coordinates("b8"), Player.P2)
             # White king should be able to castle
-            self.assertTrue(Coordinates("g1") in board.generate_legal_castle_moves(Player.P1))
+            self.assertTrue(Coordinates(
+                "g1") in board.generate_legal_castle_moves(Player.P1))
             # Move rook out of the way
             board.move(Coordinates("h1"), Coordinates("h2"), Player.P1)
             board.move(Coordinates("b8"), Coordinates("a6"), Player.P2)
             # Now white king should not be able to castle
-            self.assertFalse(Coordinates("g1") in board.generate_legal_castle_moves(Player.P1))
+            self.assertFalse(Coordinates(
+                "g1") in board.generate_legal_castle_moves(Player.P1))
             # Move rook back
             board.move(Coordinates("h2"), Coordinates("h1"), Player.P1)
             board.move(Coordinates("a6"), Coordinates("b8"), Player.P2)
             # White king should still not be able to castle
-            self.assertFalse(Coordinates("g1") in board.generate_legal_castle_moves(Player.P1))
+            self.assertFalse(Coordinates(
+                "g1") in board.generate_legal_castle_moves(Player.P1))
 
         def test_castling_revoke_king(self):
             """Tests moving a king to see if it revokes castling"""
@@ -700,17 +708,20 @@ if __name__ == "__main__":
             board.move(Coordinates("g1"), Coordinates("f3"), Player.P1)
             board.move(Coordinates("a6"), Coordinates("b8"), Player.P2)
             # White king should be able to castle
-            self.assertTrue(Coordinates("g1") in board.generate_legal_castle_moves(Player.P1))
+            self.assertTrue(Coordinates(
+                "g1") in board.generate_legal_castle_moves(Player.P1))
             # Move king out of the way
             board.move(Coordinates("e1"), Coordinates("e2"), Player.P1)
             board.move(Coordinates("b8"), Coordinates("a6"), Player.P2)
             # Now white king should not be able to castle
-            self.assertFalse(Coordinates("g1") in board.generate_legal_castle_moves(Player.P1))
+            self.assertFalse(Coordinates(
+                "g1") in board.generate_legal_castle_moves(Player.P1))
             # Move king back
             board.move(Coordinates("e2"), Coordinates("e1"), Player.P1)
             board.move(Coordinates("a6"), Coordinates("b8"), Player.P2)
             # White king should still not be able to castle
-            self.assertFalse(Coordinates("g1") in board.generate_legal_castle_moves(Player.P1))
+            self.assertFalse(Coordinates(
+                "g1") in board.generate_legal_castle_moves(Player.P1))
 
         def test_castling_in_check(self):
             """Tests to make sure you can't castle while in check, and any spots you pass while
@@ -724,23 +735,26 @@ if __name__ == "__main__":
             board[Coordinates("f1")] = Piece.NONE
             board[Coordinates("g1")] = Piece.NONE
 
-            self.assertTrue(Coordinates("g1") in board.generate_legal_castle_moves(Player.P1))
+            self.assertTrue(Coordinates(
+                "g1") in board.generate_legal_castle_moves(Player.P1))
 
             board[Coordinates("e5")] = Piece.BQ
             # King is in check by the queen, so castling should be impossible
-            self.assertFalse(Coordinates("g1") in board.generate_legal_castle_moves(Player.P1))
+            self.assertFalse(Coordinates(
+                "g1") in board.generate_legal_castle_moves(Player.P1))
             # Move queen to the right. The king can still not castle since it would be put in check
             # while moving to g1.
             board.move(Coordinates("e5"), Coordinates("f5"), Player.P2)
-            self.assertFalse(Coordinates("g1") in board.generate_legal_castle_moves(Player.P1))
+            self.assertFalse(Coordinates(
+                "g1") in board.generate_legal_castle_moves(Player.P1))
             # Move queen to the right again. Still should not be able to castle since castling would
             # put the king in check.
             board.move(Coordinates("f5"), Coordinates("g5"), Player.P2)
-            self.assertFalse(Coordinates("g1") in board.generate_legal_castle_moves(Player.P1))
+            self.assertFalse(Coordinates(
+                "g1") in board.generate_legal_castle_moves(Player.P1))
             # Remove queen. Can castle now
             board.move(Coordinates("g5"), Coordinates("h5"), Player.P2)
-            self.assertTrue(Coordinates("g1") in board.generate_legal_castle_moves(Player.P1))
-
-
+            self.assertTrue(Coordinates(
+                "g1") in board.generate_legal_castle_moves(Player.P1))
 
     unittest.main()
