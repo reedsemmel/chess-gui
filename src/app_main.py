@@ -156,7 +156,7 @@ class GameWindow(QMainWindow):
             if self.state == self.State.GAME:
                 if len(self.game_logic.state.available_moves) == 0:
                     self.parent.end_event()
-                if move_made:
+                elif move_made:
                     self.game_ui.swap_board()
 
     def __init__(self) -> None:
