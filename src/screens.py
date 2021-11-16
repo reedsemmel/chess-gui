@@ -72,8 +72,9 @@ class MainMenuScreen(Screen):
 
         # Add Buttons
         buttons: QVBoxLayout = QVBoxLayout()
-        for name, func in (("Play", self.parent().play_event), ("Load", self.parent().load_event),
-            ("Settings", self.parent().open_settings_event), ("Quit", self.parent().close)):
+        # for name, func in (("Play", self.parent().play_event), ("Load", self.parent().load_event),
+        for name, func in (("Play", self.parent().play_event), ("Settings",
+            self.parent().open_settings_event), ("Quit", self.parent().close)):
             buttons.addWidget(make_button(name, func, self))
         self.layout.addLayout(buttons, 1, 0, Qt.AlignHCenter | Qt.AlignTop)
 
