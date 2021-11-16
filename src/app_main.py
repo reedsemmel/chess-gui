@@ -13,14 +13,13 @@ Description:
 
 import sys
 
-from datetime import datetime
 from enum import Enum
 from random import randint
-from typing import Callable, Dict, Tuple
+from typing import Callable, Dict
 from PyQt5.QtCore import QPoint, QRect
 from PyQt5.QtGui import QCloseEvent, QIcon
-from PyQt5.QtWidgets import QAction, QApplication, QFileDialog, QPushButton
-from PyQt5.QtWidgets import QMainWindow, QMenu, QMessageBox, QWidget
+from PyQt5.QtWidgets import QAction, QApplication, QPushButton, QMainWindow
+from PyQt5.QtWidgets import QMenu, QMessageBox, QWidget
 from chess import Chess
 
 from screens import GameScreen, MainMenuScreen, SettingsScreen
@@ -82,21 +81,21 @@ class GameWindow(QMainWindow):
                     return f"Checkmate! {name} wins!"
             return "Something went wrong!"
 
-        def load(self) -> None:
-            """Any actions to load from a previously saved game state would want to run here."""
-            if self.state in (self.State.MAIN_MENU, self.State.GAME):
-                self.state: GameWindow.Game.State = self.State.LOADING
-                filename: Tuple[str, str] = QFileDialog.getOpenFileName(self.parent, "Open File")
-                if filename[0] != "":
-                    self.game_logic: Chess = Chess()
-                    self.game_ui: GameScreen = GameScreen(self.game_logic, self.settings,
-                        self.parent)
-                    with open(filename[0], "rt", encoding="utf-8") as load_file:
-                        load_file.readlines()
-                    self.state: GameWindow.Game.State = self.State.GAME
-                    self.parent.setCentralWidget(self.game_ui)
-                else:
-                    self.state: GameWindow.Game.State = self.State.MAIN_MENU
+        # def load(self) -> None:
+        #     """Any actions to load from a previously saved game state would want to run here."""
+        #     if self.state in (self.State.MAIN_MENU, self.State.GAME):
+        #         self.state: GameWindow.Game.State = self.State.LOADING
+        #         filename: Tuple[str, str] = QFileDialog.getOpenFileName(self.parent, "Open File")
+        #         if filename[0] != "":
+        #             self.game_logic: Chess = Chess()
+        #             self.game_ui: GameScreen = GameScreen(self.game_logic, self.settings,
+        #                 self.parent)
+        #             with open(filename[0], "rt", encoding="utf-8") as load_file:
+        #                 load_file.readlines()
+        #             self.state: GameWindow.Game.State = self.State.GAME
+        #             self.parent.setCentralWidget(self.game_ui)
+        #         else:
+        #             self.state: GameWindow.Game.State = self.State.MAIN_MENU
 
         def new_game(self) -> None:
             """Any actions to start a new game would want to run here."""
@@ -139,17 +138,17 @@ class GameWindow(QMainWindow):
             self.state: GameWindow.Game.State = self.State.MAIN_MENU
             self.parent.setCentralWidget(self.game_ui)
 
-        def save(self) -> None:
-            """Any actions to preserve game state would want to run here."""
-            if self.state == self.State.GAME:
-                self.state: GameWindow.Game.State = self.State.SAVING
-                current_datetime_string: str = str(datetime.now()).replace(" ", "_")
-                filename: Tuple[str, str] = QFileDialog.getSaveFileName(self.parent, "Save File",
-                    f"chess_game_{current_datetime_string}")
-                if filename[0] != "":
-                    with open(filename[0], "wt", encoding="utf-8") as save_file:
-                        save_file.write("")
-                self.state: GameWindow.Game.State = self.State.GAME
+        # def save(self) -> None:
+        #     """Any actions to preserve game state would want to run here."""
+        #     if self.state == self.State.GAME:
+        #         self.state: GameWindow.Game.State = self.State.SAVING
+        #         current_datetime_string: str = str(datetime.now()).replace(" ", "_")
+        #         filename: Tuple[str, str] = QFileDialog.getSaveFileName(self.parent, "Save File",
+        #             f"chess_game_{current_datetime_string}")
+        #         if filename[0] != "":
+        #             with open(filename[0], "wt", encoding="utf-8") as save_file:
+        #                 save_file.write("")
+        #         self.state: GameWindow.Game.State = self.State.GAME
 
         def update(self, move_made: bool) -> None:
             """Check for game end currently."""
@@ -213,9 +212,9 @@ class GameWindow(QMainWindow):
         end_game_message.exec()
         end_game_decisions[end_game_message.clickedButton()].__call__()
 
-    def load_event(self) -> None:
-        """Triggers loading of a game."""
-        self.game.load()
+    # def load_event(self) -> None:
+    #     """Triggers loading of a game."""
+    #     self.game.load()
 
     def open_settings_event(self) -> None:
         """Triggers the opening of the settings screens."""
@@ -225,9 +224,9 @@ class GameWindow(QMainWindow):
         """Triggers start of a new game."""
         self.game.play()
 
-    def save_event(self) -> None:
-        """Triggers saving of the game."""
-        self.game.save()
+    # def save_event(self) -> None:
+    #     """Triggers saving of the game."""
+    #     self.game.save()
 
     def show(self) -> None:
         """Shows the window and runs the setup for the game."""
@@ -240,20 +239,20 @@ class GameWindow(QMainWindow):
 
     def _set_menu_bar(self) -> None:
         """Sets the properties of the menu bar such as File->Quit."""
-        self.load_action: QAction = QAction(QIcon.fromTheme("document-open"), "Load", self)
-        self.load_action.setShortcut("Ctrl+O")
-        self.load_action.triggered.connect(self.load_event)
+        # self.load_action: QAction = QAction(QIcon.fromTheme("document-open"), "Load", self)
+        # self.load_action.setShortcut("Ctrl+O")
+        # self.load_action.triggered.connect(self.load_event)
 
         self.quit_action: QAction = QAction(QIcon.fromTheme("application-exit"), "Quit", self)
         self.quit_action.triggered.connect(self.close)
 
-        self.save_action: QAction = QAction(QIcon.fromTheme("document-save"), "Save", self)
-        self.save_action.setShortcut("Ctrl+S")
-        self.save_action.triggered.connect(self.save_event)
+        # self.save_action: QAction = QAction(QIcon.fromTheme("document-save"), "Save", self)
+        # self.save_action.setShortcut("Ctrl+S")
+        # self.save_action.triggered.connect(self.save_event)
 
         self.file_menu: QMenu = self.menuBar().addMenu("File")
-        self.file_menu.addAction(self.load_action)
-        self.file_menu.addAction(self.save_action)
+        # self.file_menu.addAction(self.load_action)
+        # self.file_menu.addAction(self.save_action)
         self.file_menu.addAction(self.quit_action)
 
     def _set_window_properties(self) -> None:
