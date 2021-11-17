@@ -101,8 +101,6 @@ class Chess:
         if not move in self.state.available_moves:
             return False
 
-        old_piece = self.piece_at(old)
-
         self.state.board.move(old, new, self.state.current_turn)
 
         # Apply the pawn promotion if the new coordinate is on the front or back rank and the piece
@@ -115,23 +113,10 @@ class Chess:
         self.state.current_turn = Player.P1 if self.state.current_turn == Player.P2 else Player.P2
         self.state.generate_all_legal_moves()
 
-        def __piece_to_char(piece: Piece) -> str:
-            if piece.is_pawn():
-                return 'P'
-            if piece.is_rook():
-                return 'R'
-            if piece.is_bishop():
-                return 'B'
-            if piece.is_knight():
-                return 'N'
-            if piece.is_queen():
-                return 'Q'
-            return 'K'
-
-        self.__move_history.append((f"{__piece_to_char(old_piece)}{old}{new}"
+        self.__move_history.append((f"{old}{new}"
             f"{'*' if self.is_in_check() else ''}"
             f"{'#' if self.is_in_checkmate() else ''}"
-            f"{__piece_to_char(promotion_piece) if promotion_piece is not None else ''}"))
+            f"{str(promotion_piece) if promotion_piece is not None else ''}"))
 
         return True
 
