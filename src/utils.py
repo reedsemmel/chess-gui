@@ -360,6 +360,7 @@ class Settings:
     _HEX_REGEX: str = "^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$"
 
     def __init__(self) -> None:
+        self.autoflip: bool = False
         self.configurables: Dict[str, Dict[str, Any]] = {
             "player_name": {
                 "form_header": "Player Name: ",
@@ -419,6 +420,10 @@ class Settings:
         """Handles a change to a configurable value."""
         if not check or bool(fullmatch(self.configurables[configurable]["regex"], value)):
             self.configurables[configurable]["value"] = value
+
+    def toggle_autoflip(self) -> None:
+        """Toggles the autoflip setting."""
+        self.autoflip = not self.autoflip
 
 if __name__ == "__main__":
     import unittest
