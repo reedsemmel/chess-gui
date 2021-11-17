@@ -30,7 +30,7 @@ class InteractiveBoard(QWidget):
     will be off.
     """
 
-    def __init__(self, chess: Chess, settings: Settings, home_window: Optional[QWidget] = None) -> None:
+    def __init__(self, chess: Chess, settings: Settings, home_window: Optional[QWidget] = None) -> None: # pylint: disable=line-too-long
         super().__init__()
         self.chess = chess
         self.selected: Coordinates = Coordinates(-1, -1)
@@ -53,6 +53,7 @@ class InteractiveBoard(QWidget):
         self.setLayout(self.grid_layout)
 
     def set_view_side(self, player: Player) -> None:
+        """Sets the view side to either one of the players"""
         self.view_side = player
         for file in range(8):
             for rank in range(8):
@@ -65,13 +66,14 @@ class InteractiveBoard(QWidget):
                     self.grid_layout.addWidget(self.tile_grid[file][rank], rank, 8 - file)
 
     def swap_view_side(self) -> None:
+        """Swaps the view side of the board"""
         if self.view_side == Player.P1:
             self.set_view_side(Player.P2)
         else:
             self.set_view_side(Player.P1)
 
     # Called by ChessTile widgets and passes their position to this function
-    def handle_click(self, coord: Coordinates) -> None:
+    def handle_click(self, coord: Coordinates) -> None: # pylint: disable=too-many-branches
         """Handles a click from the user
 
         Called by a tile once it is clicked. The tile provides the arguments
@@ -181,7 +183,7 @@ class InteractiveBoard(QWidget):
 
 
 
-    class ChessTile(QWidget):
+    class ChessTile(QWidget): # pylint: disable=too-many-instance-attributes
         """A basic chess tile widget
 
         A simple widget which holds nothing but a piece image and forwards
@@ -210,30 +212,30 @@ class InteractiveBoard(QWidget):
 
         # Lot of boilerplate here, might make it better later
 
-        def set_indicator(self, b: bool) -> None:
+        def set_indicator(self, is_indicated: bool) -> None:
             """Sets the indicator state"""
-            self.is_indicated = b
+            self.is_indicated = is_indicated
             self.__update_css()
 
-        def set_checked(self, b: bool) -> None:
+        def set_checked(self, is_checked: bool) -> None:
             """Sets the checked state"""
-            self.is_checked = b
+            self.is_checked = is_checked
             self.__update_css()
 
-        def set_selected(self, b: bool) -> None:
+        def set_selected(self, is_selected: bool) -> None:
             """Sets the selected state"""
-            self.is_selected = b
+            self.is_selected = is_selected
             self.__update_css()
 
         # Highlight priority is selected > checked > indicated
         def __update_css(self) -> None:
             """Updates the CSS style sheet"""
             if self.is_selected:
-                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #dddddd; padding: -5px;")
+                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #dddddd; padding: -5px;") # pylint: disable=line-too-long
             elif self.is_checked:
-                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #dd2222; padding: -5px;")
+                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #dd2222; padding: -5px;") # pylint: disable=line-too-long
             elif self.is_indicated:
-                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #22dd22; padding: -5px;")
+                self.setStyleSheet(f"background-color: {self.color}; border: 5px solid #22dd22; padding: -5px;") # pylint: disable=line-too-long
             else:
                 self.setStyleSheet(f"background-color: {self.color};")
 
