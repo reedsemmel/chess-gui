@@ -9,7 +9,7 @@ Description:
     Houses the the different screen states for the application.
 """
 
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 from PyQt5.QtCore import QRegExp, Qt
 from PyQt5.QtGui import QRegExpValidator, QResizeEvent
 from PyQt5.QtWidgets import QFormLayout, QGridLayout, QHBoxLayout, QLabel
@@ -78,7 +78,7 @@ class MainMenuScreen(Screen):
             buttons.addWidget(make_button(name, func, self))
         self.layout.addLayout(buttons, 1, 0, Qt.AlignHCenter | Qt.AlignTop)
 
-class GameScreen(Screen):
+class GameScreen(Screen): # pylint: disable=too-many-instance-attributes
     """Screen that houses the actual game elements like the chessboard and other features."""
 
     class CenteredSquareContainer(QWidget):
@@ -112,13 +112,27 @@ class GameScreen(Screen):
         # Initialize Instance Variables
         self.board: InteractiveBoard = InteractiveBoard(chess, settings, parent)
         self.initial_layout: bool = True
+        self.recent_turns = []
 
         # Set Layout
         self.layout: QGridLayout = QGridLayout(self)
 
         # Add Back Button
         back_button: QPushButton = make_button("Back", self.parent().abandon_game_event, self)
-        self.layout.addWidget(back_button, 0, 0, 2, 1, Qt.AlignTop | Qt.AlignLeft)
+        self.layout.addWidget(back_button, 0, 0, 1, 1, Qt.AlignTop | Qt.AlignLeft)
+
+        # Add Move Counter and History
+        self.move_layout: QVBoxLayout = QVBoxLayout()
+        self.turn_label: QLabel = QLabel("Turn 1")
+        self.move_layout.addWidget(self.turn_label)
+        self.move_layout.addWidget(QLabel("History"))
+        self.move_layout.addWidget(QLabel(""))
+        self.move_layout.addWidget(QLabel(""))
+        self.move_layout.addWidget(QLabel(""))
+        self.move_layout.addWidget(QLabel(""))
+        self.move_layout.addWidget(QLabel(""))
+        self.layout.addLayout(self.move_layout, 1, 0, 1, 1, Qt.AlignTop | Qt.AlignLeft)
+        self.layout.setRowStretch(1, 1)
 
         # Add Board
         board: GameScreen.CenteredSquareContainer = self.CenteredSquareContainer(self.board, self)
@@ -137,9 +151,23 @@ class GameScreen(Screen):
     def swap_board(self) -> None:
         """Updates the board."""
         self.board.swap_view_side()
-        self.layout.addWidget(self.player_name if self.initial_layout else self.opponent_name, 0, 2, Qt.AlignTop | Qt.AlignHCenter)
-        self.layout.addWidget(self.opponent_name if self.initial_layout else self.player_name, 1, 2, Qt.AlignBottom | Qt.AlignHCenter)
+        self.layout.addWidget(self.player_name if self.initial_layout else self.opponent_name,
+            0, 2, Qt.AlignTop | Qt.AlignHCenter)
+        self.layout.addWidget(self.opponent_name if self.initial_layout else self.player_name,
+            1, 2, Qt.AlignBottom | Qt.AlignHCenter)
         self.initial_layout: bool = not self.initial_layout
+
+    def update_moves(self, move_history: List[str]) -> None:
+        """Updates the board's moves."""
+        self.turn_label.setText(f"Turn {(len(move_history) // 2) + 1}")
+        self.recent_turns = move_history[-10 if len(move_history) % 2 == 0 else -9:]
+        self.recent_turns = reversed(tuple(tuple(self.recent_turns[i:i+2]) \
+            for i in range(0, len(self.recent_turns), 2)))
+        for i, move in enumerate(self.recent_turns):
+            old = self.move_layout.itemAt(i + 2).widget()
+            new = QLabel(f"{move[0]}, {move[1]}") if len(move) == 2 else QLabel(f"{move[0]}")
+            self.move_layout.replaceWidget(old, new)
+            old.deleteLater()
 
 class SettingsScreen(Screen):
     """Screen that houses elements that allow user to change allowed settings."""

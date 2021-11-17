@@ -157,6 +157,7 @@ class GameWindow(QMainWindow):
                     self.parent.end_event()
                 elif move_made:
                     self.game_ui.swap_board()
+                    self.game_ui.update_moves(self.game_logic.get_move_history())
 
     def __init__(self) -> None:
         super().__init__()
