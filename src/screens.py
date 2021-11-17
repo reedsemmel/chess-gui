@@ -168,6 +168,10 @@ class SettingsScreen(Screen):
             line_edit.editingFinished.connect(edit_func)
             line_edit.returnPressed.connect(edit_func)
             settings_form.addRow(configurable["form_header"], line_edit)
+        toggle: QPushButton = make_button("Autoflip", settings.toggle_autoflip, self)
+        toggle.setCheckable(True)
+        toggle.setChecked(settings.autoflip)
+        settings_form.addRow("", toggle)
         self.layout.addLayout(settings_form, 1)
 
     @staticmethod
