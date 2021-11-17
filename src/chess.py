@@ -9,14 +9,14 @@ Description:
     Houses information and utilities for the basic chess game.
 """
 
-from typing import List, Optional
+from typing import List, Optional #pylint: disable=unused-import
 
 from board import Board
 from fen import FEN
 from utils import Coordinates, Piece, Player
 
 
-class ChessState:
+class ChessState: # pylint: disable=too-few-public-methods
     """Tuple of game state"""
 
 
@@ -57,6 +57,7 @@ class Chess:
         # Stores all of the moves in a game
         self.__last_moves: "List[FEN]" = []
         self.current_fen: FEN = FEN()
+        self.__move_history: "List[str]" = []
 
     def __set_board(self, fen: FEN) -> bool:
         """Set the board to an initial state"""
@@ -94,15 +95,18 @@ class Chess:
         """Export all of the boards to a list of fen codes"""
         return self.__last_moves
 
-    def make_move(self, old: Coordinates, new: Coordinates, promotion_piece: 'Optional[Coordinates]' = None) -> bool:
+    def make_move(self, old: Coordinates, new: Coordinates, promotion_piece: 'Optional[Coordinates]' = None) -> bool: # pylint: disable=line-too-long
         """add a move to the list of moves"""
         move = (old, new)
         if not move in self.state.available_moves:
             return False
 
+        old_piece = self.piece_at(old)
+
         self.state.board.move(old, new, self.state.current_turn)
 
-        # Apply the pawn promotion if the new coordinate is on the front or back rank and the piece is a pawn
+        # Apply the pawn promotion if the new coordinate is on the front or back rank and the piece
+        # is a pawn
         if new.rank in (0, 7) and self.state.board[new].is_pawn():
             # It is the callers fault if they don't pass a promotion piece
             assert promotion_piece is not None
@@ -110,6 +114,25 @@ class Chess:
 
         self.state.current_turn = Player.P1 if self.state.current_turn == Player.P2 else Player.P2
         self.state.generate_all_legal_moves()
+
+        def __piece_to_char(piece: Piece) -> str:
+            if piece.is_pawn():
+                return 'P'
+            if piece.is_rook():
+                return 'R'
+            if piece.is_bishop():
+                return 'B'
+            if piece.is_knight():
+                return 'N'
+            if piece.is_queen():
+                return 'Q'
+            return 'K'
+
+        self.__move_history.append((f"{__piece_to_char(old_piece)}{old}{new}"
+            f"{'*' if self.is_in_check() else ''}"
+            f"{'#' if self.is_in_checkmate() else ''}"
+            f"{__piece_to_char(promotion_piece) if promotion_piece is not None else ''}"))
+
         return True
 
     def check_move(self, old: Coordinates, new: Coordinates) -> bool:
@@ -123,6 +146,10 @@ class Chess:
             if move[0] == current:
                 ret.append(move[1])
         return ret
+
+    def get_move_history(self) -> "List[str]":
+        """get the move history"""
+        return self.__move_history
 
     def is_in_check(self) -> bool:
         """check if the king is in check"""
