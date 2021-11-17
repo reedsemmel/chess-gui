@@ -158,6 +158,7 @@ class GameWindow(QMainWindow):
                 elif move_made:
                     if self.settings.autoflip:
                         self.game_ui.swap_board()
+                    self.game_ui.update_moves(self.game_logic.get_move_history())
 
     def __init__(self) -> None:
         super().__init__()
