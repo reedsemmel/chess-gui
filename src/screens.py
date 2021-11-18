@@ -134,6 +134,12 @@ class GameScreen(Screen): # pylint: disable=too-many-instance-attributes
         self.layout.addLayout(self.move_layout, 1, 0, 1, 1, Qt.AlignTop | Qt.AlignLeft)
         self.layout.setRowStretch(1, 1)
 
+        # Add evaluation
+        self.eval_label: QLabel = QLabel("")
+        self.eval_label.setWordWrap(True)
+        self.layout.addWidget(self.eval_label, 2, 0, 1, 1,
+                              Qt.AlignBottom | Qt.AlignLeft)
+
         # Add Board
         board: GameScreen.CenteredSquareContainer = self.CenteredSquareContainer(self.board, self)
         board.setContentsMargins(10, 10, 10, 10)
@@ -160,6 +166,7 @@ class GameScreen(Screen): # pylint: disable=too-many-instance-attributes
     def update_moves(self, move_history: List[str]) -> None:
         """Updates the board's moves."""
         self.turn_label.setText(f"Turn {(len(move_history) // 2) + 1}")
+        self.eval_label.setText(f"{self.board.chess.get_eval()}")
         self.recent_turns = move_history[-10 if len(move_history) % 2 == 0 else -9:]
         self.recent_turns = reversed(tuple(tuple(self.recent_turns[i:i+2]) \
             for i in range(0, len(self.recent_turns), 2)))
