@@ -108,26 +108,13 @@ class Chess:
         old = Coordinates(algebraic[0:2])
         new = Coordinates(algebraic[2:4])
         promotion = None
-        # This is ugly but it gets the job done
+        
         if len(algebraic) == 5:
+            promotion_char = algebraic[4]
             if self.state.current_turn == Player.P1:
-                if algebraic[4] == 'q':
-                    promotion = Piece.WQ
-                elif algebraic[4] == 'r':
-                    promotion = Piece.WR
-                elif algebraic[4] == 'b':
-                    promotion = Piece.WB
-                else:
-                    promotion = Piece.WN
-            else:
-                if algebraic[4] == 'q':
-                    promotion = Piece.BQ
-                elif algebraic[4] == 'r':
-                    promotion = Piece.BR
-                elif algebraic[4] == 'b':
-                    promotion = Piece.BB
-                else:
-                    promotion = Piece.BN
+                promotion_char = promotion_char.upper()
+            promotion = Piece.str_to_piece(promotion_char)
+
         return (old, new, promotion)
 
     def add_engine(self, path: str) -> None:
@@ -141,8 +128,7 @@ class Chess:
 
     def make_bot_move(self) -> bool:
         """make a bot move"""
-        old, new, promotion = self.__algebraic_to_move(self.engine.get_best_move_time(500))
-        return self.make_move(old, new, promotion)
+        return self.make_move(*self.__algebraic_to_move(self.engine.get_best_move_time(500)))
 
 
     def make_move(self, old: Coordinates, new: Coordinates, promotion_piece: 'Optional[Piece]' = None) -> bool: # pylint: disable=line-too-long

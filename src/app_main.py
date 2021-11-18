@@ -23,7 +23,7 @@ from PyQt5.QtWidgets import QMenu, QMessageBox, QWidget
 from chess import Chess
 
 from screens import GameScreen, MainMenuScreen, SettingsScreen
-from utils import Piece, Player, Settings
+from utils import GameMode, Piece, Player, Settings
 
 class GameWindow(QMainWindow):
     """Main Window for the game that will house all the GUI elements."""
@@ -156,7 +156,7 @@ class GameWindow(QMainWindow):
                 if len(self.game_logic.state.available_moves) == 0:
                     self.parent.end_event()
                 elif move_made:
-                    if self.settings.autoflip and self.settings.mode == "pvp":
+                    if self.settings.autoflip and self.settings.mode == GameMode.PVP:
                         self.game_ui.swap_board()
                     self.game_ui.update_moves(self.game_logic.get_move_history())
 
@@ -227,12 +227,20 @@ class GameWindow(QMainWindow):
         select_mode_message: QMessageBox = QMessageBox()
         select_mode_message.setWindowTitle("Select Mode")
         select_mode_message.setText("Which mode do you want to play?")
-        select_mode_message.addButton("PvP", QMessageBox.ActionRole)
-        select_mode_message.addButton("PvC", QMessageBox.ActionRole)
-        select_mode_message.addButton("CvP", QMessageBox.ActionRole)
+        select_mode_message.addButton("Local multiplayer", QMessageBox.ActionRole)
+        select_mode_message.addButton("As white against computer", QMessageBox.ActionRole)
+        select_mode_message.addButton("As black against computer", QMessageBox.ActionRole)
         select_mode_message.exec()
-        self.game.settings.mode = select_mode_message.clickedButton().text().lower()
+        response = select_mode_message.clickedButton().text().lower()
+        if response == "local multiplayer":
+            self.game.settings.mode = GameMode.PVP
+        elif response == "as white against computer":
+            self.game.settings.mode = GameMode.PVC
+        else:
+            self.game.settings.mode = GameMode.CVP
         self.game.play()
+        if self.game.settings.mode == GameMode.CVP:
+            self.game.game_ui.swap_board()
 
     # def save_event(self) -> None:
     #     """Triggers saving of the game."""

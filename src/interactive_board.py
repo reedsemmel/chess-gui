@@ -14,8 +14,9 @@ Description:
 from typing import List, Optional
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QGridLayout, QLabel, QMessageBox, QWidget
+import os
 
-from utils import Piece, Settings, Coordinates, Player
+from utils import GameMode, Piece, Settings, Coordinates, Player
 from chess import Chess
 
 class InteractiveBoard(QWidget):
@@ -38,7 +39,17 @@ class InteractiveBoard(QWidget):
         self.view_side: Player = Player.P1
         self.mode = settings.mode
 
-        self.chess.add_engine(settings.stockfish_path)
+
+        try:
+            self.chess.add_engine(settings.stockfish_path)
+        except:
+            msg = QMessageBox()
+            msg.setWindowTitle("Error")
+            msg.setText("Error loading engine. Please ensure you have stockfish installed.")
+            msg.addButton("Exit", QMessageBox.ActionRole)
+            msg.exec()
+            self.close()
+            os.exit(1)
 
 
         # Set up an 8 by 8 grid
@@ -56,9 +67,7 @@ class InteractiveBoard(QWidget):
 
         self.setLayout(self.grid_layout)
 
-        if self.mode == "cvp":
-            self.repaint()
-            self.set_view_side(Player.P2)
+        if self.mode == GameMode.CVP:
             self.chess.make_bot_move()
             self.redraw_whole_board(self.chess.get_grid())
 
@@ -131,7 +140,7 @@ class InteractiveBoard(QWidget):
             move_made: bool = self.chess.make_move(self.selected, coord, promotion_choice)
             is_move_made = True
             self.redraw_whole_board(self.chess.get_grid())
-            if self.home_window is not None and self.mode == "pvp":
+            if self.home_window is not None and self.mode == GameMode.PVP:
                 self.home_window.update_event(move_made)
 
         # If the king is in check, highlight it
@@ -144,17 +153,17 @@ class InteractiveBoard(QWidget):
         self.selected = Coordinates(-1, -1)
 
         # Handle bot moves
-        if self.mode == "pvp":
+        if self.mode == GameMode.PVP or not is_move_made:
             return
-        elif is_move_made:
-            self.repaint()
-            self.chess.make_bot_move()
-            self.redraw_whole_board(self.chess.get_grid())
-            if self.chess.is_in_check():
-                king_pos = self.chess.get_king()
-                self.tile_grid[king_pos.file][king_pos.rank].set_checked(True)
-            if self.home_window is not None:
-                self.home_window.update_event(True)
+        
+        self.repaint()
+        self.chess.make_bot_move()
+        self.redraw_whole_board(self.chess.get_grid())
+        if self.chess.is_in_check():
+            king_pos = self.chess.get_king()
+            self.tile_grid[king_pos.file][king_pos.rank].set_checked(True)
+        if self.home_window is not None:
+            self.home_window.update_event(True)
 
     # Replaces the piece on (file, rank) with the piece provided
     def draw_piece(self, piece: Piece, file: int, rank: int) -> None:
