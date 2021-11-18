@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2021 Reed Semmel, Alishan Bhayani
 # SPDX-License-Identifier: GPL-3.0-only
 
