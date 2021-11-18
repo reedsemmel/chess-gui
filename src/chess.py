@@ -9,7 +9,7 @@ Description:
     Houses information and utilities for the basic chess game.
 """
 
-from typing import List, Optional #pylint: disable=unused-import
+from typing import List, Optional  # pylint: disable=unused-import
 from stockfish import Stockfish
 
 
@@ -18,16 +18,14 @@ from fen import FEN
 from utils import Coordinates, Piece, Player
 
 
-class ChessState: # pylint: disable=too-few-public-methods
+class ChessState:  # pylint: disable=too-few-public-methods
     """Tuple of game state"""
-
 
     def __init__(self):
         self.available_moves: "List[tuple[Coordinates, Coordinates]]" = []
         self.current_turn: Player = Player.P1
         self.board: Board = Board.new_default_board()
         self.generate_all_legal_moves()
-
 
     def generate_all_legal_moves(self):
         """Populates self.available_moves with all the legal moves for current turn"""
@@ -43,12 +41,13 @@ class ChessState: # pylint: disable=too-few-public-methods
                 for move in self.board.generate_moves(coord, self.current_turn):
                     self.available_moves.append((coord, move))
         self.available_moves = self.board.prune_illegal_moves(self.available_moves,
-            self.current_turn)
+                                                              self.current_turn)
 
         # Castling
         king_pos = self.board.find_king(self.current_turn)
         for move in self.board.generate_legal_castle_moves(self.current_turn):
             self.available_moves.append((king_pos, move))
+
 
 class Chess:
     """Chess class to hold the internal state of the chess board"""
@@ -108,7 +107,7 @@ class Chess:
         old = Coordinates(algebraic[0:2])
         new = Coordinates(algebraic[2:4])
         promotion = None
-        
+
         if len(algebraic) == 5:
             promotion_char = algebraic[4]
             if self.state.current_turn == Player.P1:
@@ -139,7 +138,7 @@ class Chess:
             return "checkmate"
         return f"{'b' if eval['value'] < 0 else 'w'}: mate in {abs(eval['value'])}"
 
-    def make_move(self, old: Coordinates, new: Coordinates, promotion_piece: 'Optional[Piece]' = None) -> bool: # pylint: disable=line-too-long
+    def make_move(self, old: Coordinates, new: Coordinates, promotion_piece: 'Optional[Piece]' = None) -> bool:  # pylint: disable=line-too-long
         """add a move to the list of moves"""
         move = (old, new)
         if not move in self.state.available_moves:
@@ -148,7 +147,8 @@ class Chess:
         self.state.board.move(old, new, self.state.current_turn)
 
         # Also apply the move to the engine.
-        self.engine.make_moves_from_current_position([self.__coords_to_algebraic(old, new, promotion_piece)])
+        self.engine.make_moves_from_current_position(
+            [self.__coords_to_algebraic(old, new, promotion_piece)])
 
         # Apply the pawn promotion if the new coordinate is on the front or back rank and the piece
         # is a pawn
@@ -161,9 +161,9 @@ class Chess:
         self.state.generate_all_legal_moves()
 
         self.__move_history.append((f"{old}{new}"
-            f"{'*' if self.is_in_check() else ''}"
-            f"{'#' if self.is_in_checkmate() else ''}"
-            f"{str(promotion_piece) if promotion_piece is not None else ''}"))
+                                    f"{'*' if self.is_in_check() else ''}"
+                                    f"{'#' if self.is_in_checkmate() else ''}"
+                                    f"{str(promotion_piece) if promotion_piece is not None else ''}"))
 
         return True
 
