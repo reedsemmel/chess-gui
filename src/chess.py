@@ -59,6 +59,7 @@ class Chess:
         self.__last_moves: "List[FEN]" = []
         self.current_fen: FEN = FEN()
         self.__move_history: "List[str]" = []
+        self.engine = None
 
     def __set_board(self, fen: FEN) -> bool:
         """Set the board to an initial state"""
@@ -105,7 +106,8 @@ class Chess:
             ret += str(promotion).lower()
         return ret
 
-    def __algebraic_to_move(self, algebraic: str) -> 'tuple[Coordinates, Coordinates, Optional[Piece]]':
+    def __algebraic_to_move(self,
+                            algebraic: str) -> 'tuple[Coordinates, Coordinates, Optional[Piece]]':
         old = Coordinates(algebraic[0:2])
         new = Coordinates(algebraic[2:4])
         promotion = None
@@ -138,7 +140,7 @@ class Chess:
             return f"{'b' if eva['value'] < 0 else 'w'}: {float(abs(eva['value'])) / 100} pawn"
         if eva['value'] == 0:
             return "checkmate"
-        return f"{'b' if eval['value'] < 0 else 'w'}: mate in {abs(eval['value'])}"
+        return f"{'b' if eva['value'] < 0 else 'w'}: mate in {abs(eva['value'])}"
 
     def make_move(self, old: Coordinates, new: Coordinates, promotion_piece: 'Optional[Piece]' = None) -> bool:  # pylint: disable=line-too-long
         """add a move to the list of moves"""
@@ -165,7 +167,7 @@ class Chess:
         self.__move_history.append((f"{old}{new}"
                                     f"{'*' if self.is_in_check() else ''}"
                                     f"{'#' if self.is_in_checkmate() else ''}"
-                                    f"{str(promotion_piece) if promotion_piece is not None else ''}"))
+                                    f"{promotion_piece if promotion_piece is not None else ''}"))
 
         return True
 
