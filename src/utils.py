@@ -361,7 +361,7 @@ class Settings:
 
     def __init__(self) -> None:
         self.autoflip: bool = False
-        self.mode: str = None
+        self.mode: GameMode = None
         self.stockfish_path: str = ""
         self.configurables: Dict[str, Dict[str, Any]] = {
             "player_name": {
@@ -426,6 +426,14 @@ class Settings:
     def toggle_autoflip(self) -> None:
         """Toggles the autoflip setting."""
         self.autoflip = not self.autoflip
+
+
+class GameMode(Enum):
+    """Specifies the game mode"""
+    PVP = 0
+    PVC = 1
+    CVP = 2
+    # player vs player, and computer vs player
 
 if __name__ == "__main__":
     import unittest
