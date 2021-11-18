@@ -96,7 +96,9 @@ class Chess:
         """Export all of the boards to a list of fen codes"""
         return self.__last_moves
 
-    def __coords_to_algebraic(self, old: Coordinates, new: Coordinates, promotion: 'Optional[Piece]') -> str: # pylint: disable=line-too-long
+    @staticmethod
+    def __coords_to_algebraic(old: Coordinates, new: Coordinates,
+                              promotion: 'Optional[Piece]') -> str:
         """Converts coordinates to algebraic notation"""
         ret = f"{old}{new}"
         if promotion is not None:
@@ -148,7 +150,7 @@ class Chess:
 
         # Also apply the move to the engine.
         self.engine.make_moves_from_current_position(
-            [self.__coords_to_algebraic(old, new, promotion_piece)])
+            [Chess.__coords_to_algebraic(old, new, promotion_piece)])
 
         # Apply the pawn promotion if the new coordinate is on the front or back rank and the piece
         # is a pawn
