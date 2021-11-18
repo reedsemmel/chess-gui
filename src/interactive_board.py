@@ -51,6 +51,8 @@ class InteractiveBoard(QWidget):
             self.close()
             os.exit(1)
 
+        self.chess.engine.set_skill_level(settings.stockfish_difficulty)
+
 
         # Set up an 8 by 8 grid
         self.grid_layout = QGridLayout(self)
