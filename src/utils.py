@@ -115,6 +115,31 @@ class Piece(Enum):
     BQ = 11
     BK = 12
 
+    @classmethod
+    def _missing_(cls, value):
+        """
+        Alternative __init__ for str
+        Converts a single char piece to a Piece using the rules of FEN
+        """
+        str_to_piece: Dict[str, Piece] = {
+            ' ': Piece.NONE,
+            'P': Piece.WP,
+            'R': Piece.WR,
+            'N': Piece.WN,
+            'B': Piece.WB,
+            'Q': Piece.WQ,
+            'K': Piece.WK,
+            'p': Piece.BP,
+            'r': Piece.BR,
+            'n': Piece.BN,
+            'b': Piece.BB,
+            'q': Piece.BQ,
+            'k': Piece.BK,
+        }
+        if isinstance(value, str):
+            return cls(str_to_piece.get(value, Piece.NONE))
+        return super()._missing_(value)
+
     @staticmethod
     def get_piece_pixmap(piece) -> QPixmap:
         """Returns the corresponding pixmap for the provided piece."""
@@ -293,26 +318,6 @@ class Piece(Enum):
             Piece.BP: Piece.get_valid_black_pawn_moves,
         }
         return valid_moves[piece](current)
-
-    @staticmethod
-    def str_to_piece(piece_str: str) -> "Piece":
-        """Converts a single char piece to a Piece using the rules of FEN"""
-        str_to_piece: Dict[str, Piece] = {
-            ' ': Piece.NONE,
-            'P': Piece.WP,
-            'R': Piece.WR,
-            'N': Piece.WN,
-            'B': Piece.WB,
-            'Q': Piece.WQ,
-            'K': Piece.WK,
-            'p': Piece.BP,
-            'r': Piece.BR,
-            'n': Piece.BN,
-            'b': Piece.BB,
-            'q': Piece.BQ,
-            'k': Piece.BK,
-        }
-        return str_to_piece[piece_str]
 
     def __int__(self) -> int:
         return self.value
