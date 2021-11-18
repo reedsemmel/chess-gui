@@ -14,7 +14,6 @@ from stockfish import Stockfish
 
 
 from board import Board
-from fen import FEN
 from utils import Coordinates, Piece, Player
 
 
@@ -56,46 +55,8 @@ class Chess:
         """initialize the chess board"""
         self.state = ChessState()
         # Stores all of the moves in a game
-        self.__last_moves: "List[FEN]" = []
-        self.current_fen: FEN = FEN()
         self.__move_history: "List[str]" = []
         self.engine = None
-
-    def __set_board(self, fen: FEN) -> bool:
-        """Set the board to an initial state"""
-        if False in fen.valid:
-            return False
-        self.__last_moves.clear()
-        self.__add_board(fen)
-        return True
-
-    def __add_board(self, fen: FEN):
-        """Add a board to the list of boards"""
-        if False in fen.valid:
-            return False
-        self.__last_moves.append(fen)
-        self.current_fen = self.__last_moves[-1]
-        return True
-
-    def default_board(self) -> bool:
-        """Initialize a default board"""
-        return self.__set_board(FEN())
-
-    def import_board(self, fen: str) -> bool:
-        """Import a board from a fen code"""
-        return self.__set_board(FEN(fen))
-
-    def import_boards(self, fens: "List[FEN]") -> bool:
-        """Import boards from a fen codes"""
-        return not False in [self.__add_board(fen) for fen in fens]
-
-    def export_board(self) -> FEN:
-        """Export the board to a fen code"""
-        return self.current_fen
-
-    def export_boards(self) -> "List[FEN]":
-        """Export all of the boards to a list of fen codes"""
-        return self.__last_moves
 
     @staticmethod
     def __coords_to_algebraic(old: Coordinates, new: Coordinates,
