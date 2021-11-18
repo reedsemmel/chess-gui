@@ -26,7 +26,7 @@ def make_button(content: str, func: Callable, parent: Optional[QWidget] = None) 
     button.setObjectName("resizable")
     return button
 
-class Screen(QWidget):
+class Screen(QWidget): # pylint: disable=too-few-public-methods
     """Screen that allows for resizing text and button text."""
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
@@ -59,7 +59,7 @@ class Screen(QWidget):
             self.setStyleSheet(style)
             self.current_font_size: int = size
 
-class MainMenuScreen(Screen):
+class MainMenuScreen(Screen): # pylint: disable=too-few-public-methods
     """Screen that houses main menu elements like the title, play button, etc."""
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
@@ -81,7 +81,7 @@ class MainMenuScreen(Screen):
 class GameScreen(Screen): # pylint: disable=too-many-instance-attributes
     """Screen that houses the actual game elements like the chessboard and other features."""
 
-    class CenteredSquareContainer(QWidget):
+    class CenteredSquareContainer(QWidget): # pylint: disable=too-few-public-methods
         """Widget wrapper that keeps its child widget square and centered on both axes."""
 
         def __init__(self, child: QWidget, parent: QWidget):
