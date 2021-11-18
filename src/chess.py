@@ -130,6 +130,14 @@ class Chess:
         """make a bot move"""
         return self.make_move(*self.__algebraic_to_move(self.engine.get_best_move_time(500)))
 
+    def get_eval(self) -> str:
+        """Get evaluation from stockfish"""
+        eva: dict = self.engine.get_evaluation()
+        if eva["type"] == "cp":
+            return f"{'b' if eva['value'] < 0 else 'w'}: {float(abs(eva['value'])) / 100} pawn"
+        if eva['value'] == 0:
+            return "checkmate"
+        return f"{'b' if eval['value'] < 0 else 'w'}: mate in {abs(eval['value'])}"
 
     def make_move(self, old: Coordinates, new: Coordinates, promotion_piece: 'Optional[Piece]' = None) -> bool: # pylint: disable=line-too-long
         """add a move to the list of moves"""
