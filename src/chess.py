@@ -97,7 +97,7 @@ class Chess:
         """Export all of the boards to a list of fen codes"""
         return self.__last_moves
 
-    def __coords_to_algebraic(self, old: Coordinates, new: Coordinates, promotion: 'Optional[Piece]') -> str:
+    def __coords_to_algebraic(self, old: Coordinates, new: Coordinates, promotion: 'Optional[Piece]') -> str: # pylint: disable=line-too-long
         """Converts coordinates to algebraic notation"""
         ret = f"{old}{new}"
         if promotion is not None:
