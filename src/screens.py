@@ -12,7 +12,7 @@ Description:
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from PyQt5.QtCore import QRegExp, Qt
 from PyQt5.QtGui import QRegExpValidator, QResizeEvent
-from PyQt5.QtWidgets import QFormLayout, QGridLayout, QHBoxLayout, QLabel
+from PyQt5.QtWidgets import QFileDialog, QFormLayout, QGridLayout, QHBoxLayout, QLabel
 from PyQt5.QtWidgets import QLineEdit, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 from chess import Chess
 
@@ -175,6 +175,9 @@ class SettingsScreen(Screen):
     def __init__(self, settings: Settings, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
+        # Initialize Instance Variables
+        self.settings: Settings = settings
+
         # Set Layout
         self.layout: QVBoxLayout = QVBoxLayout(self)
 
@@ -196,11 +199,23 @@ class SettingsScreen(Screen):
             line_edit.editingFinished.connect(edit_func)
             line_edit.returnPressed.connect(edit_func)
             settings_form.addRow(configurable["form_header"], line_edit)
+        self.stockfish_path_edit: QLineEdit = QLineEdit(settings.stockfish_path, self)
+        self.stockfish_path_edit.setReadOnly(True)
+        select_path_button: QPushButton = make_button("Select Stockfish",
+            self.select_stockfish_path_event, self)
+        settings_form.addRow(select_path_button, self.stockfish_path_edit)
         toggle: QPushButton = make_button("Autoflip", settings.toggle_autoflip, self)
         toggle.setCheckable(True)
         toggle.setChecked(settings.autoflip)
         settings_form.addRow("", toggle)
         self.layout.addLayout(settings_form, 1)
+
+    def select_stockfish_path_event(self) -> None:
+        """Opens a file dialog to select a stockfish executable."""
+        path: str = QFileDialog.getOpenFileName(self, "Select Stockfish", "")[0]
+        if path:
+            self.settings.stockfish_path = path
+            self.stockfish_path_edit.setText(self.settings.stockfish_path)
 
     @staticmethod
     def _handle_change(func: Callable[[str, bool], None], line_edit: QLineEdit) -> None:

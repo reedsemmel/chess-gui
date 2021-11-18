@@ -224,6 +224,14 @@ class GameWindow(QMainWindow):
 
     def play_event(self) -> None:
         """Triggers start of a new game."""
+        select_mode_message: QMessageBox = QMessageBox()
+        select_mode_message.setWindowTitle("Select Mode")
+        select_mode_message.setText("Which mode do you want to play?")
+        select_mode_message.addButton("PvP", QMessageBox.ActionRole)
+        select_mode_message.addButton("PvC", QMessageBox.ActionRole)
+        select_mode_message.addButton("CvP", QMessageBox.ActionRole)
+        select_mode_message.exec()
+        self.game.settings.mode = select_mode_message.clickedButton().text().lower()
         self.game.play()
 
     # def save_event(self) -> None:
