@@ -10,6 +10,8 @@ Description:
 """
 
 from typing import List, Optional #pylint: disable=unused-import
+from stockfish import Stockfish
+
 
 from board import Board
 from fen import FEN
@@ -95,13 +97,65 @@ class Chess:
         """Export all of the boards to a list of fen codes"""
         return self.__last_moves
 
-    def make_move(self, old: Coordinates, new: Coordinates, promotion_piece: 'Optional[Coordinates]' = None) -> bool: # pylint: disable=line-too-long
+    def __coords_to_algebraic(self, old: Coordinates, new: Coordinates, promotion: 'Optional[Piece]') -> str:
+        """Converts coordinates to algebraic notation"""
+        ret = f"{old}{new}"
+        if promotion is not None:
+            ret += str(promotion).lower()
+        return ret
+
+    def __algebraic_to_move(self, algebraic: str) -> 'tuple[Coordinates, Coordinates, Optional[Piece]]':
+        old = Coordinates(algebraic[0:2])
+        new = Coordinates(algebraic[2:4])
+        promotion = None
+        # This is ugly but it gets the job done
+        if len(algebraic) == 5:
+            if self.state.current_turn == Player.P1:
+                if algebraic[4] == 'q':
+                    promotion = Piece.WQ
+                elif algebraic[4] == 'r':
+                    promotion = Piece.WR
+                elif algebraic[4] == 'b':
+                    promotion = Piece.WB
+                else:
+                    promotion = Piece.WN
+            else:
+                if algebraic[4] == 'q':
+                    promotion = Piece.BQ
+                elif algebraic[4] == 'r':
+                    promotion = Piece.BR
+                elif algebraic[4] == 'b':
+                    promotion = Piece.BB
+                else:
+                    promotion = Piece.BN
+        return (old, new, promotion)
+
+    def add_engine(self, path: str) -> None:
+        """Adds the engine to the chess class"""
+
+        if len(path) == 0:
+            self.engine = Stockfish()
+        else:
+            self.engine = Stockfish(path)
+        self.engine.set_position([])
+
+    def make_bot_move(self) -> bool:
+        """make a bot move"""
+        old, new, promotion = self.__algebraic_to_move(self.engine.get_best_move_time(500))
+        return self.make_move(old, new, promotion)
+
+
+    def make_move(self, old: Coordinates, new: Coordinates, promotion_piece: 'Optional[Piece]' = None) -> bool: # pylint: disable=line-too-long
         """add a move to the list of moves"""
         move = (old, new)
         if not move in self.state.available_moves:
             return False
 
         self.state.board.move(old, new, self.state.current_turn)
+
+        # Also apply the move to the engine.
+        if hasattr(self, "engine"):
+            self.engine.make_moves_from_current_position([self.__coords_to_algebraic(old, new, promotion_piece)])
 
         # Apply the pawn promotion if the new coordinate is on the front or back rank and the piece
         # is a pawn

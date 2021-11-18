@@ -36,6 +36,10 @@ class InteractiveBoard(QWidget):
         self.selected: Coordinates = Coordinates(-1, -1)
         self.home_window = home_window
         self.view_side: Player = Player.P1
+        self.mode = settings.mode
+
+        self.chess.add_engine(settings.stockfish_path)
+
 
         # Set up an 8 by 8 grid
         self.grid_layout = QGridLayout(self)
@@ -51,6 +55,13 @@ class InteractiveBoard(QWidget):
         self.set_view_side(Player.P1)
 
         self.setLayout(self.grid_layout)
+
+        if self.mode == "cvp":
+            self.repaint()
+            self.set_view_side(Player.P2)
+            self.chess.make_bot_move()
+            self.redraw_whole_board(self.chess.get_grid())
+
 
     def set_view_side(self, player: Player) -> None:
         """Sets the view side to either one of the players"""
@@ -79,11 +90,14 @@ class InteractiveBoard(QWidget):
         Called by a tile once it is clicked. The tile provides the arguments
         x and y from its position on the grid
         """
+        is_move_made = False
+
         # Remove all indicators
         for file in range(8):
             for rank in range(8):
                 if self.tile_grid[file][rank].is_indicated:
                     self.tile_grid[file][rank].set_indicator(False)
+                    self.tile_grid[file][rank].set_checked(False)
 
         # If we click on a friendly piece, we want to select it
         if self.chess.piece_at(coord).is_on_side(self.chess.get_turn()) and self.selected != coord:
@@ -115,8 +129,9 @@ class InteractiveBoard(QWidget):
                     if self.tile_grid[file][rank].is_checked:
                         self.tile_grid[file][rank].set_checked(False)
             move_made: bool = self.chess.make_move(self.selected, coord, promotion_choice)
+            is_move_made = True
             self.redraw_whole_board(self.chess.get_grid())
-            if self.home_window is not None:
+            if self.home_window is not None and self.mode == "pvp":
                 self.home_window.update_event(move_made)
 
         # If the king is in check, highlight it
@@ -127,6 +142,19 @@ class InteractiveBoard(QWidget):
         # Unselect the tile
         self.tile_grid[self.selected.file][self.selected.rank].set_selected(False)
         self.selected = Coordinates(-1, -1)
+
+        # Handle bot moves
+        if self.mode == "pvp":
+            return
+        elif is_move_made:
+            self.repaint()
+            self.chess.make_bot_move()
+            self.redraw_whole_board(self.chess.get_grid())
+            if self.chess.is_in_check():
+                king_pos = self.chess.get_king()
+                self.tile_grid[king_pos.file][king_pos.rank].set_checked(True)
+            if self.home_window is not None:
+                self.home_window.update_event(True)
 
     # Replaces the piece on (file, rank) with the piece provided
     def draw_piece(self, piece: Piece, file: int, rank: int) -> None:

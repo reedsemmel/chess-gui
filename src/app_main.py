@@ -156,7 +156,7 @@ class GameWindow(QMainWindow):
                 if len(self.game_logic.state.available_moves) == 0:
                     self.parent.end_event()
                 elif move_made:
-                    if self.settings.autoflip:
+                    if self.settings.autoflip and self.settings.mode == "pvp":
                         self.game_ui.swap_board()
                     self.game_ui.update_moves(self.game_logic.get_move_history())
 
