@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright (c) 2021 Reed Semmel
 # SPDX-License-Identifier: GPL-3.0-only
 
@@ -301,16 +299,3 @@ class InteractiveBoard(QWidget):
             self.label.setPixmap(Piece.get_piece_pixmap(self.current_piece).scaled(a0.size()))
             self.label.adjustSize()
             self.adjustSize()
-
-# Basic testing code
-
-if __name__ == "__main__":
-    from PyQt5.QtWidgets import QApplication # pylint: disable=ungrouped-imports
-
-    app = QApplication(sys.argv)
-
-    widget = InteractiveBoard(Chess(), Settings())
-    widget.setGeometry(0, 0, 800, 800)
-    widget.show()
-
-    app.exec_()
