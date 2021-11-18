@@ -361,6 +361,8 @@ class Settings:
 
     def __init__(self) -> None:
         self.autoflip: bool = False
+        self.mode: str = None
+        self.stockfish_path: str = ""
         self.configurables: Dict[str, Dict[str, Any]] = {
             "player_name": {
                 "form_header": "Player Name: ",
