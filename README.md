@@ -21,6 +21,7 @@ Note that depending on your system, the command may be `pip` or `pip3` for
 Python 3. Refer to your system's manual. Tested to run with Python 3.8
 
 ### Installing stockfish
+
 You **must** also install the actual engine. Stockfish works by creating a
 CLI interface that a GUI program interacts with. The `stockfish` package is
 just a python wrapper around this binary. You must install the actual engine
