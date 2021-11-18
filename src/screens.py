@@ -135,11 +135,10 @@ class GameScreen(Screen): # pylint: disable=too-many-instance-attributes
         self.layout.setRowStretch(1, 1)
 
         # Add evaluation
-        self.evaluation_layout: QVBoxLayout = QVBoxLayout()
         self.eval_label: QLabel = QLabel("")
         self.eval_label.setWordWrap(True)
-        self.evaluation_layout.addWidget(self.eval_label)
-        self.layout.addLayout(self.evaluation_layout, 2, 0, 1, 1, Qt.AlignBottom | Qt.AlignLeft)
+        self.layout.addWidget(self.eval_label, 2, 0, 1, 1,
+                              Qt.AlignBottom | Qt.AlignLeft)
 
         # Add Board
         board: GameScreen.CenteredSquareContainer = self.CenteredSquareContainer(self.board, self)
