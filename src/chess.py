@@ -140,8 +140,7 @@ class Chess:
         self.state.board.move(old, new, self.state.current_turn)
 
         # Also apply the move to the engine.
-        if hasattr(self, "engine"):
-            self.engine.make_moves_from_current_position([self.__coords_to_algebraic(old, new, promotion_piece)])
+        self.engine.make_moves_from_current_position([self.__coords_to_algebraic(old, new, promotion_piece)])
 
         # Apply the pawn promotion if the new coordinate is on the front or back rank and the piece
         # is a pawn
