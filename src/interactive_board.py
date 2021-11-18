@@ -11,10 +11,11 @@ Description:
     Classes and widgets for the interactive game board.
 """
 
-from typing import List, Optional
+import sys
+
+from typing import List, Optional # pylint: disable=unused-import
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QGridLayout, QLabel, QMessageBox, QWidget
-import os
 
 from utils import GameMode, Piece, Settings, Coordinates, Player
 from chess import Chess
@@ -42,14 +43,16 @@ class InteractiveBoard(QWidget):
 
         try:
             self.chess.add_engine(settings.stockfish_path)
-        except:
+        except Exception: # pylint: disable=broad-except
             msg = QMessageBox()
             msg.setWindowTitle("Error")
             msg.setText("Error loading engine. Please ensure you have stockfish installed.")
             msg.addButton("Exit", QMessageBox.ActionRole)
             msg.exec()
             self.close()
-            os.exit(1)
+            sys.exit(1)
+
+        self.chess.engine.set_skill_level(settings.stockfish_difficulty)
 
 
         # Set up an 8 by 8 grid
@@ -155,7 +158,7 @@ class InteractiveBoard(QWidget):
         # Handle bot moves
         if self.mode == GameMode.PVP or not is_move_made:
             return
-        
+
         self.repaint()
         self.chess.make_bot_move()
         self.redraw_whole_board(self.chess.get_grid())
@@ -302,8 +305,7 @@ class InteractiveBoard(QWidget):
 # Basic testing code
 
 if __name__ == "__main__":
-    import sys
-    from PyQt5.QtWidgets import QApplication
+    from PyQt5.QtWidgets import QApplication # pylint: disable=ungrouped-imports
 
     app = QApplication(sys.argv)
 

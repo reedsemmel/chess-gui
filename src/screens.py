@@ -12,7 +12,7 @@ Description:
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from PyQt5.QtCore import QRegExp, Qt
 from PyQt5.QtGui import QRegExpValidator, QResizeEvent
-from PyQt5.QtWidgets import QFileDialog, QFormLayout, QGridLayout, QHBoxLayout, QLabel
+from PyQt5.QtWidgets import QFileDialog, QFormLayout, QGridLayout, QHBoxLayout, QLabel, QSlider
 from PyQt5.QtWidgets import QLineEdit, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 from chess import Chess
 
@@ -199,11 +199,21 @@ class SettingsScreen(Screen):
             line_edit.editingFinished.connect(edit_func)
             line_edit.returnPressed.connect(edit_func)
             settings_form.addRow(configurable["form_header"], line_edit)
+        # Stockfish Path
         self.stockfish_path_edit: QLineEdit = QLineEdit(settings.stockfish_path, self)
         self.stockfish_path_edit.setReadOnly(True)
         select_path_button: QPushButton = make_button("Select Stockfish",
             self.select_stockfish_path_event, self)
         settings_form.addRow(select_path_button, self.stockfish_path_edit)
+        # Stockfish Difficulty
+        self.stockfish_difficulty_slider: QSlider = QSlider(Qt.Horizontal)
+        self.stockfish_difficulty_slider.setMinimum(0)
+        self.stockfish_difficulty_slider.setMaximum(20)
+        self.stockfish_difficulty_slider.setValue(settings.stockfish_difficulty)
+        self.stockfish_difficulty_slider.valueChanged.connect(self.stockfish_difficulty_changed_event) # pylint: disable=line-too-long
+        settings_form.addRow("Stockfish Difficulty", self.stockfish_difficulty_slider)
+        settings_form.setAlignment(self.stockfish_difficulty_slider, Qt.AlignVCenter)
+        # Autoflip
         toggle: QPushButton = make_button("Autoflip", settings.toggle_autoflip, self)
         toggle.setCheckable(True)
         toggle.setChecked(settings.autoflip)
@@ -216,6 +226,10 @@ class SettingsScreen(Screen):
         if path:
             self.settings.stockfish_path = path
             self.stockfish_path_edit.setText(self.settings.stockfish_path)
+
+    def stockfish_difficulty_changed_event(self) -> None:
+        """Updates the stockfish difficulty."""
+        self.settings.stockfish_difficulty = self.stockfish_difficulty_slider.value()
 
     @staticmethod
     def _handle_change(func: Callable[[str, bool], None], line_edit: QLineEdit) -> None:

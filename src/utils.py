@@ -363,6 +363,7 @@ class Settings:
         self.autoflip: bool = False
         self.mode: GameMode = None
         self.stockfish_path: str = ""
+        self.stockfish_difficulty: int = 10
         self.configurables: Dict[str, Dict[str, Any]] = {
             "player_name": {
                 "form_header": "Player Name: ",
