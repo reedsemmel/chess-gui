@@ -77,7 +77,7 @@ class Chess:
             promotion_char = algebraic[4]
             if self.state.current_turn == Player.P1:
                 promotion_char = promotion_char.upper()
-            promotion = Piece.str_to_piece(promotion_char)
+            promotion = Piece(promotion_char)
 
         return (old, new, promotion)
 
