@@ -1,10 +1,8 @@
-# Team-v2-FINAL1
-
-Reed Semmel, Chris Degawa, and Alishan Bhayani
-
-## Chess
+# Chess
 
 This is a program for playing chess using a GUI written in Python and PyQt5.
+This program was created by Alishan Bhayani, Chris Degawa, and Reed Semmel
+for CS340 Software Engineering at UTK.
 
 ### How to use
 
@@ -37,3 +35,8 @@ python src/app_main.py
 ```
 
 from the root of the repository, though it should work from any relative path.
+
+### Licensing
+
+This program is licensed under the GPL v3 only. View the README in assets for
+licensing of non-code assets.
